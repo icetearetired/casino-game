@@ -25,24 +25,52 @@ export function verifyToken(token: string): { userId: string } | null {
 }
 
 export async function createUser(username: string, email: string, password: string) {
+  console.log("[v0] createUser called with:", { username, email })
+
   const hashedPassword = await hashPassword(password)
-  const userId = crypto.randomUUID()
 
   const isAdmin = email.includes("admin") || email.includes("tester")
   const role = isAdmin ? "admin" : "user"
-  const balance = isAdmin ? 999999999 : 1000 // Infinite funds for admin/tester accounts
+  const balance = isAdmin ? 999999999 : 1000
 
-  const [user] = await sql`
-    INSERT INTO users (
-      id, username, email, password_hash, balance, level, xp, 
-      total_wagered, total_won, games_played, is_admin, role, created_at
-    ) VALUES (
-      ${userId}, ${username}, ${email}, ${hashedPassword}, ${balance}, 1, 0,
-      0, 0, 0, ${isAdmin}, ${role}, NOW()
-    ) RETURNING *
-  `
+  console.log("[v0] Inserting user into database:", { username, email, isAdmin, role, balance })
 
-  return user
+  try {
+    // Use gen_random_uuid() for proper UUID generation in PostgreSQL
+    const [user] = await sql`
+      INSERT INTO users (
+        id, username, email, password_hash, balance, level, xp, 
+        total_wagered, total_won, total_winnings, games_played, 
+        is_admin, role, referral_code, has_infinite_funds, is_tester, 
+        created_at, updated_at
+      ) VALUES (
+        gen_random_uuid(), 
+        ${username}, 
+        ${email}, 
+        ${hashedPassword}, 
+        ${balance}, 
+        1, 
+        0,
+        0, 
+        0, 
+        0, 
+        0, 
+        ${isAdmin}, 
+        ${role}, 
+        'REF' || substr(md5(random()::text), 1, 8),
+        ${isAdmin}, 
+        ${isAdmin}, 
+        NOW(), 
+        NOW()
+      ) RETURNING *
+    `
+
+    console.log("[v0] User inserted successfully:", { id: user.id, username: user.username })
+    return user
+  } catch (dbError: any) {
+    console.error("[v0] Database error in createUser:", dbError.message || dbError)
+    throw dbError
+  }
 }
 
 export async function authenticateUser(email: string, password: string) {

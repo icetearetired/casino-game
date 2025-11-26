@@ -222,7 +222,7 @@ export default function RoulettePage() {
                 {/* Balance Display */}
                 <div className="flex items-center gap-2 bg-zinc-700 px-4 py-2 rounded-full mb-8 w-fit">
                   <DollarSign className="h-5 w-5 text-amber-500" />
-                  <span className="text-amber-500 font-bold text-xl">{balance.toLocaleString()}</span>
+                  <span className="text-amber-500 font-bold text-xl">{(balance ?? 0).toLocaleString()}</span>
                 </div>
 
                 {/* Roulette Wheel */}
@@ -300,7 +300,7 @@ export default function RoulettePage() {
                       size="sm"
                       onClick={decreaseBet}
                       disabled={betAmount <= 10 || spinning}
-                      className="border-zinc-600 text-zinc-300"
+                      className="border-zinc-600 text-zinc-300 bg-transparent"
                     >
                       -
                     </Button>
@@ -325,7 +325,7 @@ export default function RoulettePage() {
                   <div className="flex gap-4">
                     <Button
                       variant="outline"
-                      className="flex-1 border-amber-500 text-amber-500 hover:bg-amber-500/10"
+                      className="flex-1 border-amber-500 text-amber-500 hover:bg-amber-500/10 bg-transparent"
                       onClick={clearBets}
                       disabled={spinning || Object.keys(selectedBets).length === 0}
                     >

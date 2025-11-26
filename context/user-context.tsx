@@ -5,6 +5,7 @@ import type { User } from "@/lib/database"
 
 type UserContextType = {
   user: User | null
+  balance: number
   isLoading: boolean
   login: (email: string, password: string) => Promise<void>
   register: (username: string, email: string, password: string) => Promise<void>
@@ -27,6 +28,8 @@ const UserContext = createContext<UserContextType | undefined>(undefined)
 export function UserProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+
+  const balance = user?.balance ?? 0
 
   useEffect(() => {
     const token = localStorage.getItem("casino_token")
@@ -220,6 +223,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     <UserContext.Provider
       value={{
         user,
+        balance, // Added balance to context value
         isLoading,
         login,
         register,

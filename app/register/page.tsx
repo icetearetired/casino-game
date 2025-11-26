@@ -14,20 +14,23 @@ import { useToast } from "@/components/ui/use-toast"
 import { useUser } from "@/context/user-context"
 
 export default function RegisterPage() {
-  const [name, setName] = useState("")
+  const [username, setUsername] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [acceptTerms, setAcceptTerms] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
   const { register } = useUser()
   const { toast } = useToast()
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError("")
 
-    if (!name || !email || !password || !confirmPassword) {
+    if (!username || !email || !password || !confirmPassword) {
+      setError("Please fill in all fields")
       toast({
         title: "Error",
         description: "Please fill in all fields",
@@ -37,6 +40,7 @@ export default function RegisterPage() {
     }
 
     if (password !== confirmPassword) {
+      setError("Passwords do not match")
       toast({
         title: "Error",
         description: "Passwords do not match",
@@ -45,7 +49,18 @@ export default function RegisterPage() {
       return
     }
 
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters")
+      toast({
+        title: "Error",
+        description: "Password must be at least 6 characters",
+        variant: "destructive",
+      })
+      return
+    }
+
     if (!acceptTerms) {
+      setError("You must accept the terms and conditions")
       toast({
         title: "Error",
         description: "You must accept the terms and conditions",
@@ -57,7 +72,8 @@ export default function RegisterPage() {
     setIsLoading(true)
 
     try {
-      await register(name, email, password)
+      console.log("[v0] Attempting registration with:", { username, email })
+      await register(username, email, password)
 
       toast({
         title: "Success",
@@ -66,10 +82,13 @@ export default function RegisterPage() {
       })
 
       router.push("/dashboard")
-    } catch (error) {
+    } catch (error: any) {
+      console.error("[v0] Registration error:", error)
+      const errorMessage = error.message || "Failed to create account. Please try again."
+      setError(errorMessage)
       toast({
         title: "Error",
-        description: "Failed to create account. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       })
     } finally {
@@ -89,13 +108,18 @@ export default function RegisterPage() {
           </CardHeader>
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
+              {error && (
+                <div className="p-3 bg-red-500/20 border border-red-500/50 rounded-md text-red-400 text-sm">
+                  {error}
+                </div>
+              )}
               <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
+                <Label htmlFor="username">Username</Label>
                 <Input
-                  id="name"
-                  placeholder="Your name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  id="username"
+                  placeholder="Your username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   className="bg-zinc-900 border-zinc-700"
                   required
                 />
@@ -117,6 +141,7 @@ export default function RegisterPage() {
                 <Input
                   id="password"
                   type="password"
+                  placeholder="At least 6 characters"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="bg-zinc-900 border-zinc-700"

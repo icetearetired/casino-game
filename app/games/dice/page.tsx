@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Slider } from "@/components/ui/slider"
 import { useToast } from "@/components/ui/use-toast"
 import { useUser } from "@/context/user-context"
-import { DollarSign, Dice1Icon as Dice, RotateCw } from "lucide-react"
+import { DollarSign, Dice1 as Dice, RotateCw } from "lucide-react"
 
 export default function DicePage() {
   const [betAmount, setBetAmount] = useState(10)
@@ -117,7 +117,7 @@ export default function DicePage() {
               {/* Balance Display */}
               <div className="flex items-center gap-2 bg-zinc-700 px-4 py-2 rounded-full mb-8">
                 <DollarSign className="h-5 w-5 text-amber-500" />
-                <span className="text-amber-500 font-bold text-xl">{balance.toLocaleString()}</span>
+                <span className="text-amber-500 font-bold text-xl">{(balance ?? 0).toLocaleString()}</span>
               </div>
 
               {/* Dice Game */}
@@ -189,7 +189,7 @@ export default function DicePage() {
                     size="sm"
                     onClick={decreaseBet}
                     disabled={betAmount <= 10 || rolling}
-                    className="border-zinc-600 text-zinc-300"
+                    className="border-zinc-600 text-zinc-300 bg-transparent"
                   >
                     -
                   </Button>
@@ -214,7 +214,7 @@ export default function DicePage() {
                 <div className="flex gap-4">
                   <Button
                     variant="outline"
-                    className="flex-1 border-amber-500 text-amber-500 hover:bg-amber-500/10"
+                    className="flex-1 border-amber-500 text-amber-500 hover:bg-amber-500/10 bg-transparent"
                     onClick={maxBet}
                     disabled={rolling}
                   >

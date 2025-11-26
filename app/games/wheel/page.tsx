@@ -153,7 +153,7 @@ export default function WheelPage() {
                 {/* Balance Display */}
                 <div className="flex items-center gap-2 bg-zinc-700 px-4 py-2 rounded-full mb-8 w-fit">
                   <DollarSign className="h-5 w-5 text-amber-500" />
-                  <span className="text-amber-500 font-bold text-xl">{balance.toLocaleString()}</span>
+                  <span className="text-amber-500 font-bold text-xl">{(balance ?? 0).toLocaleString()}</span>
                 </div>
 
                 {/* Wheel */}

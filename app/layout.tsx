@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import Navbar from "@/components/navbar"
 import { Toaster } from "@/components/ui/toaster"
 import { UserProvider } from "@/context/user-context"
+import LiveChat from "@/components/live-chat"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -28,6 +29,7 @@ export default function RootLayout({
             <Navbar />
             {children}
             <Toaster />
+            <LiveChat />
           </UserProvider>
         </ThemeProvider>
       </body>

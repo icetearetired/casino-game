@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -10,32 +9,35 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
-import { useUser } from "@/context/user-context"
+import { createClient } from "@/lib/supabase/client"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const { login } = useUser()
+  const [error, setError] = useState("")
   const { toast } = useToast()
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError("")
 
     if (!email || !password) {
-      toast({
-        title: "Error",
-        description: "Please fill in all fields",
-        variant: "destructive",
-      })
+      setError("Please fill in all fields")
       return
     }
 
     setIsLoading(true)
 
     try {
-      await login(email, password)
+      const supabase = createClient()
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (authError) throw authError
 
       toast({
         title: "Success",
@@ -44,10 +46,13 @@ export default function LoginPage() {
       })
 
       router.push("/dashboard")
-    } catch (error) {
+      router.refresh()
+    } catch (err: any) {
+      const errorMessage = err.message || "Failed to login. Please check your credentials."
+      setError(errorMessage)
       toast({
         title: "Error",
-        description: "Failed to login. Please check your credentials.",
+        description: errorMessage,
         variant: "destructive",
       })
     } finally {
@@ -67,6 +72,11 @@ export default function LoginPage() {
           </CardHeader>
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
+              {error && (
+                <div className="p-3 bg-red-500/20 border border-red-500/50 rounded-md text-red-400 text-sm">
+                  {error}
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input

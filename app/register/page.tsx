@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -11,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useToast } from "@/components/ui/use-toast"
-import { useUser } from "@/context/user-context"
+import { createClient } from "@/lib/supabase/client"
 
 export default function RegisterPage() {
   const [username, setUsername] = useState("")
@@ -21,7 +20,7 @@ export default function RegisterPage() {
   const [acceptTerms, setAcceptTerms] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
-  const { register } = useUser()
+  const [success, setSuccess] = useState(false)
   const { toast } = useToast()
   const router = useRouter()
 
@@ -31,60 +30,62 @@ export default function RegisterPage() {
 
     if (!username || !email || !password || !confirmPassword) {
       setError("Please fill in all fields")
-      toast({
-        title: "Error",
-        description: "Please fill in all fields",
-        variant: "destructive",
-      })
       return
     }
 
     if (password !== confirmPassword) {
       setError("Passwords do not match")
-      toast({
-        title: "Error",
-        description: "Passwords do not match",
-        variant: "destructive",
-      })
       return
     }
 
     if (password.length < 6) {
       setError("Password must be at least 6 characters")
-      toast({
-        title: "Error",
-        description: "Password must be at least 6 characters",
-        variant: "destructive",
-      })
       return
     }
 
     if (!acceptTerms) {
       setError("You must accept the terms and conditions")
-      toast({
-        title: "Error",
-        description: "You must accept the terms and conditions",
-        variant: "destructive",
-      })
       return
     }
 
     setIsLoading(true)
 
     try {
-      console.log("[v0] Attempting registration with:", { username, email })
-      await register(username, email, password)
-
-      toast({
-        title: "Success",
-        description: "Your account has been created successfully",
-        variant: "default",
+      const supabase = createClient()
+      const { data, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/dashboard`,
+          data: {
+            username: username,
+          },
+        },
       })
 
-      router.push("/dashboard")
-    } catch (error: any) {
-      console.error("[v0] Registration error:", error)
-      const errorMessage = error.message || "Failed to create account. Please try again."
+      if (authError) throw authError
+
+      // Check if email confirmation is required
+      if (data.user && !data.session) {
+        // Email confirmation is required
+        setSuccess(true)
+        toast({
+          title: "Check your email",
+          description: "We sent you a confirmation link. Please check your email to verify your account.",
+          variant: "default",
+        })
+      } else if (data.session) {
+        // User is automatically logged in (email confirmation disabled)
+        toast({
+          title: "Success",
+          description: "Your account has been created successfully!",
+          variant: "default",
+        })
+        router.push("/dashboard")
+        router.refresh()
+      }
+    } catch (err: any) {
+      const errorMessage = err.message || "Failed to create account. Please try again."
       setError(errorMessage)
       toast({
         title: "Error",
@@ -94,6 +95,34 @@ export default function RegisterPage() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  if (success) {
+    return (
+      <div className="min-h-screen bg-zinc-900 text-white py-12 px-4 flex items-center justify-center">
+        <div className="w-full max-w-md">
+          <Card className="bg-zinc-800 border-zinc-700">
+            <CardHeader className="space-y-1">
+              <CardTitle className="text-2xl text-center text-amber-500">Check Your Email</CardTitle>
+              <CardDescription className="text-center text-zinc-400">
+                We sent a confirmation link to {email}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 text-center">
+              <p className="text-zinc-300">
+                Please check your email and click the confirmation link to activate your account.
+              </p>
+              <p className="text-zinc-400 text-sm">Once confirmed, you'll receive 1,000 free coins to start playing!</p>
+            </CardContent>
+            <CardFooter className="flex flex-col">
+              <Link href="/login" className="w-full">
+                <Button className="w-full bg-amber-500 text-black hover:bg-amber-600">Go to Login</Button>
+              </Link>
+            </CardFooter>
+          </Card>
+        </div>
+      </div>
+    )
   }
 
   return (

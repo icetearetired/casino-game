@@ -8,6 +8,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { useUser } from "@/context/user-context"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
+import { getAccessToken } from "@/lib/supabase/client"
 import { Shield, Users, Infinity, Search } from "lucide-react"
 import Link from "next/link"
 
@@ -36,7 +37,10 @@ export default function AdminTestersPage() {
 
   const fetchUsers = async () => {
     try {
-      const token = localStorage.getItem("casino_token")
+      const token = await getAccessToken()
+      if (!token) {
+        return
+      }
       const response = await fetch("/api/admin/users", {
         headers: { Authorization: `Bearer ${token}` },
       })
@@ -53,7 +57,11 @@ export default function AdminTestersPage() {
 
   const toggleTesterStatus = async (userId: string, isTester: boolean) => {
     try {
-      const token = localStorage.getItem("casino_token")
+      const token = await getAccessToken()
+      if (!token) {
+        toast({ title: "Login Required", description: "Please login to update users.", variant: "destructive" })
+        return
+      }
       const response = await fetch("/api/admin/users/tester", {
         method: "POST",
         headers: {
@@ -77,7 +85,11 @@ export default function AdminTestersPage() {
 
   const toggleInfiniteFunds = async (userId: string, hasInfiniteFunds: boolean) => {
     try {
-      const token = localStorage.getItem("casino_token")
+      const token = await getAccessToken()
+      if (!token) {
+        toast({ title: "Login Required", description: "Please login to update users.", variant: "destructive" })
+        return
+      }
       const response = await fetch("/api/admin/users/infinite-funds", {
         method: "POST",
         headers: {

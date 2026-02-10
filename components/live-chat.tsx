@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useUser } from "@/context/user-context"
 import { useToast } from "@/components/ui/use-toast"
+import { getAccessToken } from "@/lib/supabase/client"
 import { Send, MessageCircle, X, Minimize2, Maximize2 } from "lucide-react"
 
 interface ChatMessage {
@@ -70,7 +71,11 @@ export default function LiveChat() {
 
     setLoading(true)
     try {
-      const token = localStorage.getItem("casino_token")
+      const token = await getAccessToken()
+      if (!token) {
+        toast({ title: "Login Required", description: "Please login to chat", variant: "destructive" })
+        return
+      }
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: {

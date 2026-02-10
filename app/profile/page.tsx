@@ -10,6 +10,7 @@ import { useUser } from "@/context/user-context"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { User, Trophy, Star, Target, Gamepad2, TrendingUp, Calendar, Shield, Award, Sparkles } from "lucide-react"
+import { getAccessToken } from "@/lib/supabase/client"
 
 const LEVEL_THRESHOLDS = [
   0, 100, 250, 500, 1000, 2000, 3500, 5500, 8000, 12000, 17000, 23000, 30000, 40000, 52000, 67000, 85000, 107000,
@@ -53,7 +54,10 @@ export default function ProfilePage() {
 
   const fetchStats = async () => {
     try {
-      const token = localStorage.getItem("casino_token")
+      const token = await getAccessToken()
+      if (!token) {
+        return
+      }
       const response = await fetch("/api/user/stats", {
         headers: { Authorization: `Bearer ${token}` },
       })
@@ -68,7 +72,10 @@ export default function ProfilePage() {
 
   const fetchAchievements = async () => {
     try {
-      const token = localStorage.getItem("casino_token")
+      const token = await getAccessToken()
+      if (!token) {
+        return
+      }
       const response = await fetch("/api/user/achievements", {
         headers: { Authorization: `Bearer ${token}` },
       })
@@ -83,7 +90,11 @@ export default function ProfilePage() {
 
   const updateAvatar = async (avatarId: string) => {
     try {
-      const token = localStorage.getItem("casino_token")
+      const token = await getAccessToken()
+      if (!token) {
+        toast({ title: "Login Required", description: "Please login to update your avatar.", variant: "destructive" })
+        return
+      }
       const avatar = AVATARS.find((a) => a.id === avatarId)
       const response = await fetch("/api/user/avatar", {
         method: "POST",

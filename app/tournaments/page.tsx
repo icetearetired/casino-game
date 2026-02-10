@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/components/ui/use-toast"
 import { useUser } from "@/context/user-context"
+import { getAccessToken } from "@/lib/supabase/client"
 import { DollarSign, Users, Trophy, Clock, Calendar } from "lucide-react"
 
 interface Tournament {
@@ -59,7 +60,15 @@ export default function TournamentsPage() {
     }
 
     try {
-      const token = localStorage.getItem("casino_token")
+      const token = await getAccessToken()
+      if (!token) {
+        toast({
+          title: "Login Required",
+          description: "Please login to join tournaments.",
+          variant: "destructive",
+        })
+        return
+      }
       const response = await fetch(`/api/tournaments/${tournamentId}/join`, {
         method: "POST",
         headers: {

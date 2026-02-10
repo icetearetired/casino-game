@@ -9,6 +9,7 @@ import { useUser } from "@/context/user-context"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
+import { getAccessToken } from "@/lib/supabase/client"
 import { Users, Trophy, Plus, Search, Shield } from "lucide-react"
 import Link from "next/link"
 
@@ -62,7 +63,10 @@ export default function ClansPage() {
 
   const fetchMyClan = async () => {
     try {
-      const token = localStorage.getItem("casino_token")
+      const token = await getAccessToken()
+      if (!token) {
+        return
+      }
       const response = await fetch("/api/clans/my-clan", {
         headers: { Authorization: `Bearer ${token}` },
       })
@@ -82,7 +86,11 @@ export default function ClansPage() {
     }
 
     try {
-      const token = localStorage.getItem("casino_token")
+      const token = await getAccessToken()
+      if (!token) {
+        toast({ title: "Login Required", variant: "destructive" })
+        return
+      }
       const response = await fetch("/api/clans", {
         method: "POST",
         headers: {
@@ -115,7 +123,11 @@ export default function ClansPage() {
     }
 
     try {
-      const token = localStorage.getItem("casino_token")
+      const token = await getAccessToken()
+      if (!token) {
+        toast({ title: "Login Required", variant: "destructive" })
+        return
+      }
       const response = await fetch(`/api/clans/${clanId}/join`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },

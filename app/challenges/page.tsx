@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { useToast } from "@/components/ui/use-toast"
 import { useUser } from "@/context/user-context"
+import { getAccessToken } from "@/lib/supabase/client"
 import { Target, Calendar, Gift, CheckCircle } from "lucide-react"
 
 interface Challenge {
@@ -41,7 +42,7 @@ export default function ChallengesPage() {
 
   const fetchChallenges = async () => {
     try {
-      const token = localStorage.getItem("casino_token")
+      const token = await getAccessToken()
       const response = await fetch(`/api/challenges?type=${selectedType}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       })
@@ -67,7 +68,15 @@ export default function ChallengesPage() {
     }
 
     try {
-      const token = localStorage.getItem("casino_token")
+      const token = await getAccessToken()
+      if (!token) {
+        toast({
+          title: "Login Required",
+          description: "Please login to claim rewards.",
+          variant: "destructive",
+        })
+        return
+      }
       const response = await fetch(`/api/challenges/${challengeId}/claim`, {
         method: "POST",
         headers: {

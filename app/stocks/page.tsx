@@ -8,6 +8,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { useUser } from "@/context/user-context"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { getAccessToken } from "@/lib/supabase/client"
 import { TrendingUp, TrendingDown, DollarSign, BarChart3, Briefcase, ArrowUpRight, ArrowDownRight } from "lucide-react"
 
 interface Stock {
@@ -72,7 +73,10 @@ export default function StocksPage() {
 
   const fetchPortfolio = async () => {
     try {
-      const token = localStorage.getItem("casino_token")
+      const token = await getAccessToken()
+      if (!token) {
+        return
+      }
       const response = await fetch("/api/stocks/portfolio", {
         headers: { Authorization: `Bearer ${token}` },
       })
@@ -89,7 +93,11 @@ export default function StocksPage() {
     if (!selectedStock || tradeAmount <= 0) return
 
     try {
-      const token = localStorage.getItem("casino_token")
+      const token = await getAccessToken()
+      if (!token) {
+        toast({ title: "Login Required", description: "Please login to trade stocks.", variant: "destructive" })
+        return
+      }
       const response = await fetch("/api/stocks/trade", {
         method: "POST",
         headers: {

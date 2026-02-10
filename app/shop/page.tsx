@@ -8,6 +8,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { useUser } from "@/context/user-context"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { getAccessToken } from "@/lib/supabase/client"
 import { Package, Gift, Sparkles, DollarSign, Star, Zap } from "lucide-react"
 
 interface LootCrate {
@@ -76,7 +77,10 @@ export default function ShopPage() {
 
   const checkDailyReward = async () => {
     try {
-      const token = localStorage.getItem("casino_token")
+      const token = await getAccessToken()
+      if (!token) {
+        return
+      }
       const response = await fetch("/api/rewards/daily/check", {
         headers: { Authorization: `Bearer ${token}` },
       })
@@ -91,7 +95,11 @@ export default function ShopPage() {
 
   const claimDailyReward = async () => {
     try {
-      const token = localStorage.getItem("casino_token")
+      const token = await getAccessToken()
+      if (!token) {
+        toast({ title: "Login Required", description: "Please login to claim rewards.", variant: "destructive" })
+        return
+      }
       const response = await fetch("/api/rewards/daily", {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
@@ -129,7 +137,11 @@ export default function ShopPage() {
     setOpening(crateId)
 
     try {
-      const token = localStorage.getItem("casino_token")
+      const token = await getAccessToken()
+      if (!token) {
+        toast({ title: "Login Required", variant: "destructive" })
+        return
+      }
       const response = await fetch("/api/shop/crate/open", {
         method: "POST",
         headers: {

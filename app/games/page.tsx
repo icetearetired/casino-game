@@ -1,133 +1,148 @@
-import type React from "react"
+import { redirect } from "next/navigation"
+import { createClient } from "@/lib/supabase/server"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { Card, CardContent } from "@/components/ui/card"
-import { DollarSign, Dice1Icon as Dice, Target, WalletCardsIcon as Cards, TrendingUp, Zap, Grid3X3 } from "lucide-react"
+import { Coins, Sparkles, Spade, TrendingUp } from "lucide-react"
+import { LogoutButton } from "@/components/logout-button"
 
-export default function GamesPage() {
+export default async function GamesPage() {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) {
+    redirect("/auth/login")
+  }
+
+  // Fetch user profile with balance
+  const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single()
+
+  // Fetch recent game history
+  const { data: gameHistory } = await supabase
+    .from("game_history")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(5)
+
   return (
-    <div className="min-h-screen bg-zinc-900 text-white py-12 px-4">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl md:text-5xl font-bold mb-8 text-center text-amber-500">Casino Games</h1>
-        <p className="text-xl text-center mb-12 max-w-3xl mx-auto text-zinc-300">
-          Choose from our selection of exciting casino games and try your luck with virtual currency!
-        </p>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          <GameCard
-            title="Slot Machine"
-            description="Try your luck with our exciting slot machine. Match symbols and win big!"
-            icon={<DollarSign className="h-12 w-12 text-amber-500" />}
-            href="/games/slots"
-            imagePath="/slot-machine-casino.png"
-          />
-
-          <GameCard
-            title="Roulette"
-            description="Place your bets and watch the wheel spin. Will your number come up?"
-            icon={<Target className="h-12 w-12 text-amber-500" />}
-            href="/games/roulette"
-            imagePath="/placeholder-qlv5q.png"
-          />
-
-          <GameCard
-            title="Dice Roll"
-            description="Predict the outcome of the dice and multiply your winnings!"
-            icon={<Dice className="h-12 w-12 text-amber-500" />}
-            href="/games/dice"
-            imagePath="/placeholder-viyzw.png"
-          />
-
-          <GameCard
-            title="Crash"
-            description="Watch the multiplier rise and cash out before it crashes! High risk, high reward."
-            icon={<TrendingUp className="h-12 w-12 text-amber-500" />}
-            href="/games/crash"
-            imagePath="/crash-game-multiplier-chart.png"
-          />
-
-          <GameCard
-            title="Plinko"
-            description="Drop the ball and watch it bounce through pegs to win massive multipliers!"
-            icon={<Zap className="h-12 w-12 text-amber-500" />}
-            href="/games/plinko"
-            imagePath="/plinko-pegs.png"
-          />
-
-          <GameCard
-            title="Minesweeper"
-            description="Navigate the minefield and cash out before hitting a bomb. Strategy meets luck!"
-            icon={<Grid3X3 className="h-12 w-12 text-amber-500" />}
-            href="/games/minesweeper"
-            imagePath="/minesweeper-grid.png"
-          />
-
-          <GameCard
-            title="Blackjack"
-            description="Beat the dealer to 21 without going bust in this classic card game."
-            icon={<Cards className="h-12 w-12 text-amber-500" />}
-            href="/games/blackjack"
-            imagePath="/placeholder-f44wp.png"
-          />
-
-          <GameCard
-            title="Wheel of Fortune"
-            description="Spin the wheel and win amazing prizes! Simple and exciting."
-            icon={<Target className="h-12 w-12 text-amber-500" />}
-            href="/games/wheel"
-            imagePath="/spinning-wheel-of-fortune.png"
-          />
-
-          <GameCard
-            title="Scratch Cards"
-            description="Scratch and reveal instant prizes with our virtual scratch cards."
-            icon={<DollarSign className="h-12 w-12 text-amber-500" />}
-            href="/games/scratch"
-            imagePath="/scratch-card-lottery.png"
-          />
+    <div className="min-h-svh bg-casino-dark text-white">
+      {/* Header */}
+      <header className="border-b border-casino-gold/20 bg-casino-dark/95 backdrop-blur">
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <Link href="/games" className="text-2xl font-bold text-casino-gold">
+              Lucky Streak Casino
+            </Link>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 bg-casino-gold/10 px-4 py-2 rounded-lg border border-casino-gold/30">
+                <Coins className="w-5 h-5 text-casino-gold" />
+                <span className="text-casino-gold font-semibold">{profile?.balance?.toLocaleString() || 0}</span>
+                <span className="text-casino-silver text-sm">chips</span>
+              </div>
+              <LogoutButton />
+            </div>
+          </div>
         </div>
+      </header>
+
+      <div className="container mx-auto px-6 py-12">
+        {/* Welcome Section */}
+        <div className="mb-12">
+          <h1 className="text-4xl font-bold mb-2 text-casino-gold">Welcome, {profile?.username || "Player"}!</h1>
+          <p className="text-casino-silver text-lg">Choose your game and start playing</p>
+        </div>
+
+        {/* Games Grid */}
+        <div className="grid md:grid-cols-3 gap-6 mb-12">
+          <Card className="bg-card border-casino-gold/20 hover:border-casino-gold/50 transition-colors">
+            <CardHeader>
+              <div className="w-12 h-12 bg-casino-gold/10 rounded-lg flex items-center justify-center mb-4">
+                <Sparkles className="w-6 h-6 text-casino-gold" />
+              </div>
+              <CardTitle className="text-casino-gold">Slot Machine</CardTitle>
+              <CardDescription className="text-casino-silver">
+                Spin the reels and match symbols to win big!
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button asChild className="w-full bg-casino-gold text-casino-dark hover:bg-casino-gold/90">
+                <Link href="/games/slots">Play Slots</Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-card border-casino-gold/20 hover:border-casino-gold/50 transition-colors">
+            <CardHeader>
+              <div className="w-12 h-12 bg-casino-gold/10 rounded-lg flex items-center justify-center mb-4">
+                <Spade className="w-6 h-6 text-casino-gold" />
+              </div>
+              <CardTitle className="text-casino-gold">Blackjack</CardTitle>
+              <CardDescription className="text-casino-silver">
+                Beat the dealer and get as close to 21 as possible!
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button asChild className="w-full bg-casino-gold text-casino-dark hover:bg-casino-gold/90">
+                <Link href="/games/blackjack">Play Blackjack</Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-card border-casino-gold/20 hover:border-casino-gold/50 transition-colors">
+            <CardHeader>
+              <div className="w-12 h-12 bg-casino-gold/10 rounded-lg flex items-center justify-center mb-4">
+                <TrendingUp className="w-6 h-6 text-casino-gold" />
+              </div>
+              <CardTitle className="text-casino-gold">Roulette</CardTitle>
+              <CardDescription className="text-casino-silver">
+                Place your bets on red, black, or a number!
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button asChild className="w-full bg-casino-gold text-casino-dark hover:bg-casino-gold/90">
+                <Link href="/games/roulette">Play Roulette</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Recent Activity */}
+        {gameHistory && gameHistory.length > 0 && (
+          <Card className="bg-card border-casino-gold/20">
+            <CardHeader>
+              <CardTitle className="text-casino-gold">Recent Activity</CardTitle>
+              <CardDescription className="text-casino-silver">Your last 5 games</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {gameHistory.map((game) => (
+                  <div key={game.id} className="flex items-center justify-between p-3 bg-casino-dark rounded-lg">
+                    <div className="flex items-center gap-4">
+                      <span className="text-casino-gold font-medium capitalize">{game.game_type}</span>
+                      <span className="text-casino-silver text-sm">{game.result}</span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <span className="text-casino-silver text-sm">Bet: {game.bet_amount}</span>
+                      <span
+                        className={`font-semibold ${game.payout > game.bet_amount ? "text-green-400" : game.payout === game.bet_amount ? "text-casino-silver" : "text-red-400"}`}
+                      >
+                        {game.payout > game.bet_amount
+                          ? `+${game.payout - game.bet_amount}`
+                          : game.payout === game.bet_amount
+                            ? "Push"
+                            : `-${game.bet_amount - game.payout}`}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   )
-}
-
-function GameCard({
-  title,
-  description,
-  icon,
-  href,
-  imagePath,
-  disabled = false,
-}: {
-  title: string
-  description: string
-  icon: React.ReactNode
-  href: string
-  imagePath: string
-  disabled?: boolean
-}) {
-  const content = (
-    <Card
-      className={`overflow-hidden bg-zinc-800 border-zinc-700 ${!disabled ? "hover:border-amber-500" : "opacity-70"} transition-all duration-300`}
-    >
-      <div className="relative h-40 bg-zinc-700">
-        <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 to-transparent z-10" />
-        <img src={imagePath || "/placeholder.svg"} alt={title} className="w-full h-full object-cover" />
-        <div className="absolute bottom-4 left-4 z-20">
-          <div className="bg-zinc-900/80 p-2 rounded-full">{icon}</div>
-        </div>
-      </div>
-      <CardContent className="p-6">
-        <h3 className="text-xl font-bold mb-2">{title}</h3>
-        <p className="text-zinc-300 mb-4">{description}</p>
-        {!disabled && <div className="text-amber-500 font-medium">Play Now →</div>}
-        {disabled && <div className="text-zinc-500 font-medium">Coming Soon</div>}
-      </CardContent>
-    </Card>
-  )
-
-  if (disabled) {
-    return content
-  }
-
-  return <Link href={href}>{content}</Link>
 }

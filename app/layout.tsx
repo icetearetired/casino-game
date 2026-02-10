@@ -1,37 +1,46 @@
 import type React from "react"
-import "./globals.css"
 import type { Metadata } from "next"
-import { Inter } from "next/font/google"
-import { ThemeProvider } from "@/components/theme-provider"
-import Navbar from "@/components/navbar"
-import { Toaster } from "@/components/ui/toaster"
-import { UserProvider } from "@/context/user-context"
-import LiveChat from "@/components/live-chat"
+import { Geist, Geist_Mono } from "next/font/google"
+import { Analytics } from "@vercel/analytics/next"
+import "./globals.css"
 
-const inter = Inter({ subsets: ["latin"] })
+const _geist = Geist({ subsets: ["latin"] })
+const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Lucky Casino - Virtual Gambling Experience",
-  description: "Experience the thrill of casino games with virtual currency. No real money involved.",
-    generator: 'v0.app'
+  title: "Lucky Streak Casino - Play Free Casino Games",
+  description:
+    "Experience the thrill of Vegas with slots, blackjack, and roulette. Play with virtual chips, no real money required.",
+  generator: "v0.app",
+  icons: {
+    icon: [
+      {
+        url: "/icon-light-32x32.png",
+        media: "(prefers-color-scheme: light)",
+      },
+      {
+        url: "/icon-dark-32x32.png",
+        media: "(prefers-color-scheme: dark)",
+      },
+      {
+        url: "/icon.svg",
+        type: "image/svg+xml",
+      },
+    ],
+    apple: "/apple-icon.png",
+  },
 }
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode
-}) {
+}>) {
   return (
     <html lang="en">
-      <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-          <UserProvider>
-            <Navbar />
-            {children}
-            <Toaster />
-            <LiveChat />
-          </UserProvider>
-        </ThemeProvider>
+      <body className={`font-sans antialiased`}>
+        {children}
+        <Analytics />
       </body>
     </html>
   )

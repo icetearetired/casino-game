@@ -118,22 +118,22 @@ export default async function GamesPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {gameHistory.map((game) => (
+                {gameHistory.map((game: { id: string; game_type: string; result: { outcome?: string } | null; bet_amount: number; win_amount: number }) => (
                   <div key={game.id} className="flex items-center justify-between p-3 bg-casino-dark rounded-lg">
                     <div className="flex items-center gap-4">
                       <span className="text-casino-gold font-medium capitalize">{game.game_type}</span>
-                      <span className="text-casino-silver text-sm">{game.result}</span>
+                      <span className="text-casino-silver text-sm">{game.result?.outcome || ""}</span>
                     </div>
                     <div className="flex items-center gap-4">
                       <span className="text-casino-silver text-sm">Bet: {game.bet_amount}</span>
                       <span
-                        className={`font-semibold ${game.payout > game.bet_amount ? "text-green-400" : game.payout === game.bet_amount ? "text-casino-silver" : "text-red-400"}`}
+                        className={`font-semibold ${game.win_amount > game.bet_amount ? "text-green-400" : game.win_amount === game.bet_amount ? "text-casino-silver" : "text-red-400"}`}
                       >
-                        {game.payout > game.bet_amount
-                          ? `+${game.payout - game.bet_amount}`
-                          : game.payout === game.bet_amount
+                        {game.win_amount > game.bet_amount
+                          ? `+${game.win_amount - game.bet_amount}`
+                          : game.win_amount === game.bet_amount
                             ? "Push"
-                            : `-${game.bet_amount - game.payout}`}
+                            : `-${game.bet_amount - game.win_amount}`}
                       </span>
                     </div>
                   </div>

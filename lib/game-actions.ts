@@ -26,13 +26,17 @@ export async function updateBalance(
     throw new Error("Failed to update balance")
   }
 
-  // Record game history
+  // Calculate multiplier
+  const multiplier = betAmount > 0 ? payout / betAmount : 0
+
+  // Record game history (using actual DB schema: win_amount, multiplier, result as jsonb)
   const { error: historyError } = await supabase.from("game_history").insert({
     user_id: user.id,
     game_type: gameType,
     bet_amount: betAmount,
-    payout: payout,
-    result: result,
+    win_amount: payout,
+    multiplier: multiplier,
+    result: { outcome: result },
   })
 
   if (historyError) {

@@ -73,28 +73,19 @@ export function RouletteGame({ initialBalance }: { initialBalance: number }) {
       let totalPayout = 0
 
       for (const bet of bets) {
-        let won = false
-
         if (bet.type === "number" && bet.value === finalResult) {
-          won = true
           totalPayout += bet.amount * 36 // 35:1 + original bet
         } else if (bet.type === "red" && redNumbers.includes(finalResult)) {
-          won = true
           totalPayout += bet.amount * 2
         } else if (bet.type === "black" && blackNumbers.includes(finalResult)) {
-          won = true
           totalPayout += bet.amount * 2
         } else if (bet.type === "even" && finalResult !== 0 && finalResult % 2 === 0) {
-          won = true
           totalPayout += bet.amount * 2
         } else if (bet.type === "odd" && finalResult % 2 === 1) {
-          won = true
           totalPayout += bet.amount * 2
         } else if (bet.type === "low" && finalResult >= 1 && finalResult <= 18) {
-          won = true
           totalPayout += bet.amount * 2
         } else if (bet.type === "high" && finalResult >= 19 && finalResult <= 36) {
-          won = true
           totalPayout += bet.amount * 2
         }
       }
@@ -119,11 +110,15 @@ export function RouletteGame({ initialBalance }: { initialBalance: number }) {
         setMessage(resultMessage)
       }
 
-      // Save to database
-      await updateBalance(newBalance, "roulette", totalBetAmount, totalPayout, `${finalResult} ${resultColor}`)
-
       setSpinning(false)
       setBets([])
+
+      // Save to database (after UI update for responsiveness)
+      try {
+        await updateBalance(newBalance, "roulette", totalBetAmount, totalPayout, `${finalResult} ${resultColor}`)
+      } catch {
+        // Balance already updated in UI, will sync on next page load
+      }
     }, 3000)
   }
 

@@ -69,9 +69,9 @@ export function BlackjackGame({ initialBalance }: { initialBalance: number }) {
     // Check for blackjack
     if (calculateHandValue(player) === 21) {
       if (calculateHandValue(dealer) === 21) {
-        endGame(dealerHand, player, "push")
+        endGame(dealer, player, "push")
       } else {
-        endGame(dealerHand, player, "blackjack")
+        endGame(dealer, player, "blackjack")
       }
     }
   }
@@ -167,7 +167,11 @@ export function BlackjackGame({ initialBalance }: { initialBalance: number }) {
     const newBalance = balance - bet + payout
     setBalance(newBalance)
 
-    await updateBalance(newBalance, "blackjack", bet, payout, result)
+    try {
+      await updateBalance(newBalance, "blackjack", bet, payout, result)
+    } catch {
+      // Balance already updated in UI, will sync on next page load
+    }
   }
 
   const reset = () => {

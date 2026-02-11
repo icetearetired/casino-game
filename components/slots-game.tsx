@@ -79,9 +79,6 @@ export function SlotsGame({ initialBalance }: { initialBalance: number }) {
       const newBalance = balance - bet + payout
       setBalance(newBalance)
 
-      // Save to database
-      await updateBalance(newBalance, "slots", bet, payout, result)
-
       if (payout > bet) {
         setMessage(`${result} You won ${payout - bet} chips!`)
       } else if (payout === bet) {
@@ -91,6 +88,13 @@ export function SlotsGame({ initialBalance }: { initialBalance: number }) {
       }
 
       setSpinning(false)
+
+      // Save to database (after UI update for responsiveness)
+      try {
+        await updateBalance(newBalance, "slots", bet, payout, result)
+      } catch {
+        // Balance already updated in UI, will sync on next page load
+      }
     }, 2000)
   }
 

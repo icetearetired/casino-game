@@ -10,12 +10,14 @@ import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { Turnstile } from '@marsidev/react-turnstile'
 
 export default function Page() {
   const [email, setEmail] = useState("")
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [repeatPassword, setRepeatPassword] = useState("")
+  const [captchaToken, setCaptchaToken] = useState()
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
@@ -125,6 +127,12 @@ export default function Page() {
                 <Link href="/auth/login" className="underline underline-offset-4 text-casino-gold">
                   Login
                 </Link>
+                <Turnstile
+  siteKey="0x4AAAAAACC-E2JPBgi0pFAc"
+  onSuccess={(token) => {
+    setCaptchaToken(token)
+  }}
+/>
               </div>
             </form>
           </CardContent>

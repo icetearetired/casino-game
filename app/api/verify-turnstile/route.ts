@@ -1,27 +1,40 @@
 import { NextResponse } from "next/server"
 
 export async function POST(req: Request) {
-  const { token } = await req.json()
+  try {
+    const { token } = await req.json()
+    const secret = process.env.TURNSTILE_SECRET_KEY
 
-  const secret = process.env.TURNSTILE_SECRET_KEY
-
-  if (!secret || !token) {
-    return NextResponse.json({ success: false })
-  }
-
-  const formData = new URLSearchParams()
-  formData.append("secret", secret)
-  formData.append("response", token)
-
-  const result = await fetch(
-    "https://challenges.cloudflare.com/turnstile/v0/siteverify",
-    {
-      method: "POST",
-      body: formData,
+    if (!secret) {
+      return NextResponse.json({
+        success: false,
+        error: "Missing secret key"
+      })
     }
-  )
 
-  const data = await result.json()
+    const formData = new URLSearchParams()
+    formData.append("secret", secret)
+    formData.append("response", token)
 
-  return NextResponse.json({ success: data.success })
+    const result = await fetch(
+      "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+      {
+        method: "POST",
+        body: formData,
+      }
+    )
+
+    const data = await result.json()
+
+    return NextResponse.json({
+      success: data.success,
+      errors: data["error-codes"] || []
+    })
+
+  } catch (err) {
+    return NextResponse.json({
+      success: false,
+      error: "Server error"
+    })
+  }
 }

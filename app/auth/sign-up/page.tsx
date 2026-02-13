@@ -80,7 +80,11 @@ export default function Page() {
 
       router.push("/auth/sign-up-success")
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Something went wrong.")
+        if (err instanceof Error && err.message.toLowerCase().includes("timeout-or-duplicate")) {
+        setError("Captcha expired or was already used. Please complete it again.")
+      } else {
+        setError(err instanceof Error ? err.message : "Something went wrong.")
+      }
     } finally {
       setIsLoading(false)
     }

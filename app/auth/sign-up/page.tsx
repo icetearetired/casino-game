@@ -70,7 +70,13 @@ export default function Page() {
         },
       })
 
-      if (error) throw error
+           if (error) {
+        if (error.message?.toLowerCase().includes("captcha")) {
+          turnstileRef.current?.reset()
+          setCaptchaToken(null)
+        }
+        throw error
+      }
 
       router.push("/auth/sign-up-success")
     } catch (err: unknown) {

@@ -5,14 +5,13 @@ export async function POST(req: Request) {
 
   const secret = process.env.TURNSTILE_SECRET_KEY
 
-  if (!secret) {
+  if (!secret || !token) {
     return NextResponse.json({ success: false })
   }
 
   const formData = new URLSearchParams()
   formData.append("secret", secret)
   formData.append("response", token)
-
 
   const result = await fetch(
     "https://challenges.cloudflare.com/turnstile/v0/siteverify",

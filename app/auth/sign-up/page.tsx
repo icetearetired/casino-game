@@ -57,12 +57,11 @@ export default function Page() {
         throw new Error("Captcha verification failed. Try again.")
       }
 
-      // ✅ Create account
+      // ✅ Create account (captcha already verified above)
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          captchaToken,
           emailRedirectTo:
             process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
             `${window.location.origin}/games`,

@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Sparkles, TrendingUp, Shield } from "lucide-react"
+import { Sparkles, TrendingUp, Shield, UserRound } from "lucide-react"
+import { GuestPlayButton } from "@/components/guest-play-button"
 
 export default function Page() {
   return (
@@ -34,6 +35,7 @@ export default function Page() {
                 <Link href="/auth/login">Login</Link>
               </Button>
             </div>
+            <GuestPlayButton />
           </div>
         </div>
       </div>

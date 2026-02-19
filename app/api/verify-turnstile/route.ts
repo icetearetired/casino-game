@@ -2,14 +2,23 @@ import { NextResponse } from "next/server"
 
 export async function POST(req: Request) {
   try {
-    const { token } = await req.json()
-    const secret = process.env.TURNSTILE_SECRET_KEY
+    const body = await req.json()
+    const token = body?.token
 
+    if (!token || typeof token !== "string") {
+      return NextResponse.json(
+        { success: false, error: "Missing CAPTCHA token" },
+        { status: 400 }
+      )
+    }
+
+    const secret = process.env.TURNSTILE_SECRET_KEY
     if (!secret) {
-      return NextResponse.json({
-        success: false,
-        error: "Missing secret key"
-      })
+      console.error("TURNSTILE_SECRET_KEY is not configured")
+      return NextResponse.json(
+        { success: false, error: "Server configuration error" },
+        { status: 500 }
+      )
     }
 
     const formData = new URLSearchParams()
@@ -20,21 +29,28 @@ export async function POST(req: Request) {
       "https://challenges.cloudflare.com/turnstile/v0/siteverify",
       {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: formData.toString(),
       }
     )
+
+    if (!result.ok) {
+      return NextResponse.json(
+        { success: false, error: "Failed to verify with Cloudflare" },
+        { status: 502 }
+      )
+    }
 
     const data = await result.json()
 
     return NextResponse.json({
-      success: data.success,
-      errors: data["error-codes"] || []
+      success: data.success === true,
+      errors: data["error-codes"] || [],
     })
-
-  } catch (err) {
-    return NextResponse.json({
-      success: false,
-      error: "Server error"
-    })
+  } catch {
+    return NextResponse.json(
+      { success: false, error: "Internal server error" },
+      { status: 500 }
+    )
   }
 }

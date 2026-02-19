@@ -53,6 +53,17 @@ export default async function GamesPage() {
         <div className="mb-12">
           <h1 className="text-4xl font-bold mb-2 text-casino-gold">Welcome, {profile?.username || "Player"}!</h1>
           <p className="text-casino-silver text-lg">Choose your game and start playing</p>
+          {profile?.username?.startsWith("Guest_") && (
+            <div className="mt-4 p-4 bg-casino-gold/10 border border-casino-gold/30 rounded-lg">
+              <p className="text-casino-silver text-sm">
+                Playing as a guest? Your progress won't be saved.{" "}
+                <Link href="/auth/sign-up" className="text-casino-gold hover:underline">
+                  Create an account
+                </Link>{" "}
+                to keep your winnings!
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Games Grid */}

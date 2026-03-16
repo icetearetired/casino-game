@@ -51,9 +51,12 @@ export function TurnstileWidget({ siteKey, onSuccess, onExpire, onError }: Turns
       "error-callback": onError,
       theme: "dark",
     })
-  }, [onSuccess, onExpire, onError])
+  }, [siteKey, onSuccess, onExpire, onError])
 
   useEffect(() => {
+    // Reset rendered flag on mount so we can render a fresh widget
+    renderedRef.current = false
+
     // If turnstile is already loaded, render immediately
     if (window.turnstile) {
       renderWidget()
@@ -77,6 +80,7 @@ export function TurnstileWidget({ siteKey, onSuccess, onExpire, onError }: Turns
           // widget may already be removed
         }
       }
+      widgetIdRef.current = null
       renderedRef.current = false
     }
   }, [renderWidget])

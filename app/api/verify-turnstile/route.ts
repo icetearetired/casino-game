@@ -12,7 +12,7 @@ export async function POST(req: Request) {
       )
     }
 
-    const secret = process.env.TURNSTILE_SECRET_KEY
+    const secret = "0x4AAAAAACC-E0fcg8kmECnFT31Cpz9LDYc"
     if (!secret) {
       console.error("TURNSTILE_SECRET_KEY is not configured")
       return NextResponse.json(

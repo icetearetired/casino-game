@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
-import { RouletteGame } from "@/components/roulette-game"
+import { BlackjackGame } from "@/components/blackjack-game"
 
-export default async function RoulettePage() {
+export default async function BlackjackPage() {
   const supabase = await createClient()
 
   const {
@@ -14,5 +14,5 @@ export default async function RoulettePage() {
 
   const { data: profile } = await supabase.from("profiles").select("balance").eq("id", user.id).single()
 
-  return <RouletteGame initialBalance={profile?.balance || 0} />
+  return <BlackjackGame initialBalance={profile?.balance || 0} />
 }

@@ -11,6 +11,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { TurnstileWidget } from "@/components/turnstile-widget"
 import { UserRound } from "lucide-react"
+import { generateGuestUsername } from "@/lib/utils"
 
 export function LoginForm({ turnstileSiteKey }: { turnstileSiteKey: string | null }) {
   const [email, setEmail] = useState("")
@@ -91,7 +92,13 @@ export function LoginForm({ turnstileSiteKey }: { turnstileSiteKey: string | nul
 
     try {
       const supabase = createClient()
-      const { error: authError } = await supabase.auth.signInAnonymously()
+      const { error: authError } = await supabase.auth.signInAnonymously({
+        options: {
+          data: {
+            username: generateGuestUsername(),
+          },
+        },
+      })
       if (authError) throw authError
       router.push("/games")
     } catch (err: unknown) {

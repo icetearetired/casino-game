@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { UserRound } from "lucide-react"
+import { generateGuestUsername } from "@/lib/utils"
 
 export function GuestPlayButton() {
   const [isLoading, setIsLoading] = useState(false)
@@ -17,7 +18,13 @@ export function GuestPlayButton() {
 
     try {
       const supabase = createClient()
-      const { error } = await supabase.auth.signInAnonymously()
+      const { error } = await supabase.auth.signInAnonymously({
+        options: {
+          data: {
+            username: generateGuestUsername(),
+          },
+        },
+      })
       if (error) throw error
       router.push("/games")
     } catch (error: unknown) {

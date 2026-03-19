@@ -1,11 +1,7 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
-
-const _geist = Geist({ subsets: ["latin"] })
-const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "Lucky Streak Casino - Play Free Casino Games",
@@ -41,7 +37,7 @@ export default function RootLayout({
       <head>
         <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer />
       </head>
-      <body className={`font-sans antialiased`}>
+      <body className="font-sans antialiased">
         {children}
         <Analytics />
       </body>

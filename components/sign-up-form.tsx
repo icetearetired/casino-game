@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { TurnstileWidget } from "@/components/turnstile-widget"
+import { generateUniqueUsername, normalizeUsername } from "@/lib/utils"
 
 export function SignUpForm({ turnstileSiteKey }: { turnstileSiteKey: string | null }) {
   const [email, setEmail] = useState("")
@@ -49,6 +50,12 @@ export function SignUpForm({ turnstileSiteKey }: { turnstileSiteKey: string | nu
       return
     }
 
+    const normalizedUsername = normalizeUsername(username)
+    if (!normalizedUsername) {
+      setError("Please enter a username.")
+      return
+    }
+
     if (password !== repeatPassword) {
       setError("Passwords do not match.")
       return
@@ -77,22 +84,35 @@ export function SignUpForm({ turnstileSiteKey }: { turnstileSiteKey: string | nu
       }
 
       const supabase = createClient()
-      const { error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo:
-            process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
-            `${window.location.origin}/games`,
-          data: { username },
-        },
-      })
+      const signUpWithUsername = async (usernameCandidate: string) => {
+        return supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo:
+              process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
+              `${window.location.origin}/games`,
+            data: { username: usernameCandidate },
+          },
+        })
+      }
+
+      let { error: authError } = await signUpWithUsername(normalizedUsername)
+
+      if (authError && shouldRetryWithGeneratedUsername(authError.message)) {
+        const fallbackUsername = generateUniqueUsername(normalizedUsername)
+        ;({ error: authError } = await signUpWithUsername(fallbackUsername))
+      }
 
       if (authError) throw authError
       router.push("/auth/sign-up-success")
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Something went wrong."
-      setError(message)
+      setError(
+        shouldRetryWithGeneratedUsername(message)
+          ? "We could not create your account with that username. Please try a different username."
+          : message
+      )
       if (
         message.toLowerCase().includes("captcha") ||
         message.toLowerCase().includes("timeout-or-duplicate")

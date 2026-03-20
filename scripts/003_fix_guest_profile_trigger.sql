@@ -1,4 +1,3 @@
--- Ensure guest/anonymous users always receive a fallback username.
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER
 LANGUAGE plpgsql

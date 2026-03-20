@@ -1,4 +1,4 @@
--- Trigger to auto-create profile on signup
+-- Ensure new profiles get a unique fallback username during signup.
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER
 LANGUAGE plpgsql

@@ -12,6 +12,17 @@ import { useRouter } from "next/navigation"
 import { TurnstileWidget } from "@/components/turnstile-widget"
 import { generateUniqueUsername, normalizeUsername } from "@/lib/utils"
 
+function shouldRetryWithGeneratedUsername(errorMessage: string): boolean {
+  const lowerMessage = errorMessage.toLowerCase()
+  return (
+    lowerMessage.includes("username") ||
+    lowerMessage.includes("unique") ||
+    lowerMessage.includes("duplicate") ||
+    lowerMessage.includes("already exists") ||
+    lowerMessage.includes("constraint")
+  )
+}
+
 export function SignUpForm({ turnstileSiteKey }: { turnstileSiteKey: string | null }) {
   const [email, setEmail] = useState("")
   const [username, setUsername] = useState("")

@@ -12,16 +12,6 @@ import { useRouter } from "next/navigation"
 import { TurnstileWidget } from "@/components/turnstile-widget"
 import { generateUniqueUsername, normalizeUsername } from "@/lib/utils"
 
-function shouldRetryWithGeneratedUsername(message: string) {
-  const normalizedMessage = message.toLowerCase()
-
-  return (
-    normalizedMessage.includes("database error") ||
-    normalizedMessage.includes("saving new user") ||
-    normalizedMessage.includes("unexpected_failure")
-  )
-}
-
 export function SignUpForm({ turnstileSiteKey }: { turnstileSiteKey: string | null }) {
   const [email, setEmail] = useState("")
   const [username, setUsername] = useState("")

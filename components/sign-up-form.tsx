@@ -10,8 +10,9 @@ import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { TurnstileWidget } from "@/components/turnstile-widget"
+import { generateUniqueUsername, normalizeUsername } from "@/lib/utils"
 
-export function SignUpForm({ turnstileSiteKey }: { turnstileSiteKey: string }) {
+export function SignUpForm({ turnstileSiteKey }: { turnstileSiteKey: string | null }) {
   const [email, setEmail] = useState("")
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
@@ -44,8 +45,14 @@ export function SignUpForm({ turnstileSiteKey }: { turnstileSiteKey: string }) {
     e.preventDefault()
     setError(null)
 
-    if (!captchaToken) {
+    if (turnstileSiteKey && !captchaToken) {
       setError("Please complete the CAPTCHA verification.")
+      return
+    }
+
+    const normalizedUsername = normalizeUsername(username)
+    if (!normalizedUsername) {
+      setError("Please enter a username.")
       return
     }
 
@@ -62,35 +69,50 @@ export function SignUpForm({ turnstileSiteKey }: { turnstileSiteKey: string }) {
     setIsLoading(true)
 
     try {
-      const verifyRes = await fetch("/api/verify-turnstile", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: captchaToken }),
-      })
-      const verifyData = await verifyRes.json()
+      if (turnstileSiteKey) {
+        const verifyRes = await fetch("/api/verify-turnstile", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: captchaToken }),
+        })
+        const verifyData = await verifyRes.json()
 
-      if (!verifyData.success) {
-        resetCaptcha()
-        throw new Error("CAPTCHA verification failed. Please try again.")
+        if (!verifyData.success) {
+          resetCaptcha()
+          throw new Error("CAPTCHA verification failed. Please try again.")
+        }
       }
 
       const supabase = createClient()
-      const { error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo:
-            process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
-            `${window.location.origin}/games`,
-          data: { username },
-        },
-      })
+      const signUpWithUsername = async (usernameCandidate: string) => {
+        return supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo:
+              process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
+              `${window.location.origin}/games`,
+            data: { username: usernameCandidate },
+          },
+        })
+      }
+
+      let { error: authError } = await signUpWithUsername(normalizedUsername)
+
+      if (authError && shouldRetryWithGeneratedUsername(authError.message)) {
+        const fallbackUsername = generateUniqueUsername(normalizedUsername)
+        ;({ error: authError } = await signUpWithUsername(fallbackUsername))
+      }
 
       if (authError) throw authError
       router.push("/auth/sign-up-success")
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Something went wrong."
-      setError(message)
+      setError(
+        shouldRetryWithGeneratedUsername(message)
+          ? "We could not create your account with that username. Please try a different username."
+          : message
+      )
       if (
         message.toLowerCase().includes("captcha") ||
         message.toLowerCase().includes("timeout-or-duplicate")
@@ -162,17 +184,21 @@ export function SignUpForm({ turnstileSiteKey }: { turnstileSiteKey: string }) {
 
                 {error && <p className="text-sm text-red-500">{error}</p>}
 
-                <TurnstileWidget
-                  key={captchaKey}
-                  siteKey={turnstileSiteKey}
-                  onSuccess={handleCaptchaSuccess}
-                  onExpire={handleCaptchaExpire}
-                  onError={handleCaptchaError}
-                />
+                {turnstileSiteKey ? (
+                  <TurnstileWidget
+                    key={captchaKey}
+                    siteKey={turnstileSiteKey}
+                    onSuccess={handleCaptchaSuccess}
+                    onExpire={handleCaptchaExpire}
+                    onError={handleCaptchaError}
+                  />
+                ) : (
+                  <p className="text-sm text-casino-silver">CAPTCHA is unavailable in this environment.</p>
+                )}
 
                 <Button
                   type="submit"
-                  disabled={isLoading || !captchaToken}
+                  disabled={isLoading || (turnstileSiteKey ? !captchaToken : false)}
                   className="w-full bg-casino-gold text-casino-dark hover:bg-casino-gold/90"
                 >
                   {isLoading ? "Creating account..." : "Sign Up"}

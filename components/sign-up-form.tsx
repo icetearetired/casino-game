@@ -12,6 +12,17 @@ import { useRouter } from "next/navigation"
 import { TurnstileWidget } from "@/components/turnstile-widget"
 import { generateUniqueUsername, normalizeUsername } from "@/lib/utils"
 
+function shouldRetryWithGeneratedUsername(errorMessage: string): boolean {
+  const lowerMessage = errorMessage.toLowerCase()
+  return (
+    lowerMessage.includes("username") ||
+    lowerMessage.includes("unique") ||
+    lowerMessage.includes("duplicate") ||
+    lowerMessage.includes("already exists") ||
+    lowerMessage.includes("constraint")
+  )
+}
+
 export function SignUpForm({ turnstileSiteKey }: { turnstileSiteKey: string | null }) {
   const [email, setEmail] = useState("")
   const [username, setUsername] = useState("")
@@ -68,6 +79,8 @@ export function SignUpForm({ turnstileSiteKey }: { turnstileSiteKey: string | nu
 
     setIsLoading(true)
 
+    let shouldResetCaptchaAfterAttempt = false
+
     try {
       if (turnstileSiteKey) {
         const verifyRes = await fetch("/api/verify-turnstile", {
@@ -81,6 +94,8 @@ export function SignUpForm({ turnstileSiteKey }: { turnstileSiteKey: string | nu
           resetCaptcha()
           throw new Error("CAPTCHA verification failed. Please try again.")
         }
+
+        shouldResetCaptchaAfterAttempt = true
       }
 
       const supabase = createClient()
@@ -114,6 +129,7 @@ export function SignUpForm({ turnstileSiteKey }: { turnstileSiteKey: string | nu
           : message
       )
       if (
+        shouldResetCaptchaAfterAttempt ||
         message.toLowerCase().includes("captcha") ||
         message.toLowerCase().includes("timeout-or-duplicate")
       ) {

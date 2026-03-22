@@ -52,6 +52,8 @@ export function LoginForm({ turnstileSiteKey }: { turnstileSiteKey: string | nul
 
     setIsLoading(true)
 
+    let shouldResetCaptchaAfterAttempt = false
+
     try {
       if (turnstileSiteKey) {
         const verifyRes = await fetch("/api/verify-turnstile", {
@@ -65,6 +67,8 @@ export function LoginForm({ turnstileSiteKey }: { turnstileSiteKey: string | nul
           resetCaptcha()
           throw new Error("CAPTCHA verification failed. Please try again.")
         }
+
+        shouldResetCaptchaAfterAttempt = true
       }
 
       const supabase = createClient()
@@ -78,7 +82,7 @@ export function LoginForm({ turnstileSiteKey }: { turnstileSiteKey: string | nul
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "An error occurred"
       setError(message)
-      if (message.toLowerCase().includes("captcha")) {
+      if (shouldResetCaptchaAfterAttempt || message.toLowerCase().includes("captcha")) {
         resetCaptcha()
       }
     } finally {

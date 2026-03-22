@@ -79,6 +79,8 @@ export function SignUpForm({ turnstileSiteKey }: { turnstileSiteKey: string | nu
 
     setIsLoading(true)
 
+    let shouldResetCaptchaAfterAttempt = false
+
     try {
       if (turnstileSiteKey) {
         const verifyRes = await fetch("/api/verify-turnstile", {
@@ -92,6 +94,8 @@ export function SignUpForm({ turnstileSiteKey }: { turnstileSiteKey: string | nu
           resetCaptcha()
           throw new Error("CAPTCHA verification failed. Please try again.")
         }
+
+        shouldResetCaptchaAfterAttempt = true
       }
 
       const supabase = createClient()
@@ -125,6 +129,7 @@ export function SignUpForm({ turnstileSiteKey }: { turnstileSiteKey: string | nu
           : message
       )
       if (
+        shouldResetCaptchaAfterAttempt ||
         message.toLowerCase().includes("captcha") ||
         message.toLowerCase().includes("timeout-or-duplicate")
       ) {

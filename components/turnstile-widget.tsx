@@ -1,6 +1,6 @@
 "use client"
 
-import { Turnstile } from "@/lib/next-turnstile"
+import { Turnstile } from "@/lib/nextjs-turnstile"
 
 interface TurnstileWidgetProps {
   siteKey: string
@@ -13,14 +13,14 @@ export function TurnstileWidget({ siteKey, onSuccess, onExpire, onError }: Turns
   return (
     <Turnstile
       siteKey={siteKey}
-      onVerify={onSuccess}
+      onSuccess={onSuccess}
       onExpire={onExpire}
       onError={() => onError?.()}
       theme="dark"
       size="flexible"
       retry="auto"
       refreshExpired="auto"
-      responseField={false}
+      responseFieldName={false}
       className="min-h-[65px]"
     />
   )

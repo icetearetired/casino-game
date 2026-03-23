@@ -5,13 +5,25 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+function generateRandomSlug(length: number) {
+  const alphabet = "abcdefghijklmnopqrstuvwxyz0123456789"
+
+  if (typeof crypto !== "undefined" && typeof crypto.getRandomValues === "function") {
+    const bytes = new Uint8Array(length)
+    crypto.getRandomValues(bytes)
+    return Array.from(bytes, (byte) => alphabet[byte % alphabet.length]).join("")
+  }
+
+  return Array.from({ length }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join("")
+}
+
 export function generateGuestUsername() {
-  return `Guest_${Math.random().toString(36).slice(2, 10)}`
+  return `Guest_${generateRandomSlug(12)}`
 }
 
 export function generateUniqueUsername(email: string): string {
   const base = email.split("@")[0].toLowerCase().slice(0, 15)
-  const random = Math.random().toString(36).slice(2, 6)
+  const random = generateRandomSlug(6)
   return `${base}_${random}`
 }
 

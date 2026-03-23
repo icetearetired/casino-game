@@ -115,8 +115,9 @@ export function SignUpForm({ turnstileSiteKey }: { turnstileSiteKey: string | nu
       let { error: authError } = await signUpWithUsername(normalizedUsername)
 
       if (authError && shouldRetryWithGeneratedUsername(authError.message)) {
-        const fallbackUsername = generateUniqueUsername(normalizedUsername)
-        ;({ error: authError } = await signUpWithUsername(fallbackUsername))
+        // ⚠️ STOP and force new captcha
+        resetCaptcha()
+        throw new Error("Please complete CAPTCHA again.")
       }
 
       if (authError) throw authError

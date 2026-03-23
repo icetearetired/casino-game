@@ -10,18 +10,7 @@ import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { TurnstileWidget } from "@/components/turnstile-widget"
-import { generateUniqueUsername, normalizeUsername } from "@/lib/utils"
-
-function shouldRetryWithGeneratedUsername(errorMessage: string): boolean {
-  const lowerMessage = errorMessage.toLowerCase()
-  return (
-    lowerMessage.includes("username") ||
-    lowerMessage.includes("unique") ||
-    lowerMessage.includes("duplicate") ||
-    lowerMessage.includes("already exists") ||
-    lowerMessage.includes("constraint")
-  )
-}
+import { normalizeUsername } from "@/lib/utils"
 
 export function SignUpForm({ turnstileSiteKey }: { turnstileSiteKey: string | null }) {
   const [email, setEmail] = useState("")
@@ -79,63 +68,48 @@ export function SignUpForm({ turnstileSiteKey }: { turnstileSiteKey: string | nu
 
     setIsLoading(true)
 
-    let shouldResetCaptchaAfterAttempt = false
-
     try {
+      const supabase = createClient()
+
+      // ✅ VERIFY CAPTCHA RIGHT BEFORE SIGNUP
       if (turnstileSiteKey) {
-        const verifyRes = await fetch("/api/verify-turnstile", {
+        const res = await fetch("/api/verify-turnstile", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ token: captchaToken }),
         })
-        const verifyData = await verifyRes.json()
 
-        if (!verifyData.success) {
+        const data = await res.json()
+
+        if (!data.success) {
           resetCaptcha()
           throw new Error("CAPTCHA verification failed. Please try again.")
         }
-
-        shouldResetCaptchaAfterAttempt = true
       }
 
-      const supabase = createClient()
-      const signUpWithUsername = async (usernameCandidate: string) => {
-        return supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo:
-              process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
-              `${window.location.origin}/games`,
-            data: { username: usernameCandidate },
-          },
-        })
-      }
+      const { error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo:
+            process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
+            `${window.location.origin}/games`,
+          data: { username: normalizedUsername },
+        },
+      })
 
-      let { error: authError } = await signUpWithUsername(normalizedUsername)
-
-      if (authError && shouldRetryWithGeneratedUsername(authError.message)) {
-        // ⚠️ STOP and force new captcha
+      if (authError) {
         resetCaptcha()
-        throw new Error("Please complete CAPTCHA again.")
+        throw authError
       }
 
-      if (authError) throw authError
       router.push("/auth/sign-up-success")
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Something went wrong."
-      setError(
-        shouldRetryWithGeneratedUsername(message)
-          ? "We could not create your account with that username. Please try a different username."
-          : message
-      )
-      if (
-        shouldResetCaptchaAfterAttempt ||
-        message.toLowerCase().includes("captcha") ||
-        message.toLowerCase().includes("timeout-or-duplicate")
-      ) {
-        resetCaptcha()
-      }
+      const message =
+        err instanceof Error ? err.message : "Something went wrong."
+
+      setError(message)
+      resetCaptcha() // always reset on failure
     } finally {
       setIsLoading(false)
     }
@@ -164,18 +138,19 @@ export function SignUpForm({ turnstileSiteKey }: { turnstileSiteKey: string | nu
                     className="bg-casino-dark border-casino-gold/30"
                   />
                 </div>
+
                 <div className="grid gap-2">
                   <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
                     type="email"
-                    placeholder="m@example.com"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="bg-casino-dark border-casino-gold/30"
                   />
                 </div>
+
                 <div className="grid gap-2">
                   <Label htmlFor="password">Password</Label>
                   <Input
@@ -187,6 +162,7 @@ export function SignUpForm({ turnstileSiteKey }: { turnstileSiteKey: string | nu
                     className="bg-casino-dark border-casino-gold/30"
                   />
                 </div>
+
                 <div className="grid gap-2">
                   <Label htmlFor="repeat-password">Confirm Password</Label>
                   <Input
@@ -210,7 +186,9 @@ export function SignUpForm({ turnstileSiteKey }: { turnstileSiteKey: string | nu
                     onError={handleCaptchaError}
                   />
                 ) : (
-                  <p className="text-sm text-casino-silver">CAPTCHA is unavailable in this environment.</p>
+                  <p className="text-sm text-casino-silver">
+                    CAPTCHA is unavailable in this environment.
+                  </p>
                 )}
 
                 <Button
@@ -223,11 +201,8 @@ export function SignUpForm({ turnstileSiteKey }: { turnstileSiteKey: string | nu
               </div>
 
               <div className="mt-4 text-center text-sm text-casino-silver">
-                {"Already have an account? "}
-                <Link
-                  href="/auth/login"
-                  className="underline underline-offset-4 text-casino-gold"
-                >
+                Already have an account?{" "}
+                <Link href="/auth/login" className="underline text-casino-gold">
                   Login
                 </Link>
               </div>

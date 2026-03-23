@@ -38,6 +38,7 @@ export function SignUpForm({ turnstileSiteKey }: { turnstileSiteKey: string | nu
 
   const resetCaptcha = () => {
     setCaptchaToken(null)
+    // Changing the key forces the Turnstile widget to re-mount and reset
     setCaptchaKey((k) => k + 1)
   }
 
@@ -45,6 +46,7 @@ export function SignUpForm({ turnstileSiteKey }: { turnstileSiteKey: string | nu
     e.preventDefault()
     setError(null)
 
+    // Basic Validation
     if (turnstileSiteKey && !captchaToken) {
       setError("Please complete the CAPTCHA verification.")
       return
@@ -71,22 +73,8 @@ export function SignUpForm({ turnstileSiteKey }: { turnstileSiteKey: string | nu
     try {
       const supabase = createClient()
 
-      // ✅ VERIFY CAPTCHA RIGHT BEFORE SIGNUP
-      if (turnstileSiteKey) {
-        const res = await fetch("/api/verify-turnstile", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token: captchaToken }),
-        })
-
-        const data = await res.json()
-
-        if (!data.success) {
-          resetCaptcha()
-          throw new Error("CAPTCHA verification failed. Please try again.")
-        }
-      }
-
+      // ✅ Pass the CAPTCHA token directly to Supabase Auth
+      // Supabase will automatically securely verify the Turnstile token on their backend
       const { error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -95,21 +83,20 @@ export function SignUpForm({ turnstileSiteKey }: { turnstileSiteKey: string | nu
             process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
             `${window.location.origin}/games`,
           data: { username: normalizedUsername },
+          captchaToken: captchaToken ?? undefined, // Add the token here!
         },
       })
 
       if (authError) {
-        resetCaptcha()
         throw authError
       }
 
       router.push("/auth/sign-up-success")
     } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : "Something went wrong."
-
+      const message = err instanceof Error ? err.message : "Something went wrong."
       setError(message)
-      resetCaptcha() // always reset on failure
+      // Always reset the CAPTCHA on failure so the user can try again
+      resetCaptcha() 
     } finally {
       setIsLoading(false)
     }

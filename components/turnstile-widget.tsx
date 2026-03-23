@@ -1,6 +1,6 @@
 "use client"
 
-import { Turnstile } from "@/lib/nextjs-turnstile"
+import { Turnstile } from "nextjs-turnstile"
 
 interface TurnstileWidgetProps {
   siteKey: string
@@ -9,18 +9,27 @@ interface TurnstileWidgetProps {
   onError?: () => void
 }
 
-export function TurnstileWidget({ siteKey, onSuccess, onExpire, onError }: TurnstileWidgetProps) {
+export function TurnstileWidget({
+  siteKey,
+  onSuccess,
+  onExpire,
+  onError,
+}: TurnstileWidgetProps) {
   return (
     <Turnstile
       siteKey={siteKey}
-      onSuccess={onSuccess}
-      onExpire={onExpire}
-      onError={() => onError?.()}
-      theme="dark"
-      size="flexible"
-      retry="auto"
-      refreshExpired="auto"
-      responseFieldName={false}
+      onSuccess={(token) => {
+        console.log("Turnstile token:", token)
+        onSuccess(token)
+      }}
+      onExpire={() => {
+        onExpire?.()
+      }}
+      onError={() => {
+        onError?.()
+      }}
+     theme="dark"
+     size="flexible"
       className="min-h-[65px]"
     />
   )

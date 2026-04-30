@@ -9,10 +9,10 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { TurnstileWidget } from "@/components/turnstile-widget"
+import { CustomCaptcha } from "@/components/custom-captcha"
 import { normalizeUsername } from "@/lib/utils"
 
-export function SignUpForm({ turnstileSiteKey }: { turnstileSiteKey: string | null }) {
+export function SignUpForm() {
   const [email, setEmail] = useState("")
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
@@ -27,19 +27,8 @@ export function SignUpForm({ turnstileSiteKey }: { turnstileSiteKey: string | nu
     setCaptchaToken(token)
   }, [])
 
-  const handleCaptchaExpire = useCallback(() => {
-    setCaptchaToken(null)
-  }, [])
-
-  const handleCaptchaError = useCallback(() => {
-    setCaptchaToken(null)
-    setError("CAPTCHA failed to load. Please refresh the page.")
-  }, [])
-
   const resetCaptcha = () => {
     setCaptchaToken(null)
-    // Changing the key forces the Turnstile widget to re-mount and reset
-    setCaptchaKey((k) => k + 1)
   }
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -47,7 +36,7 @@ export function SignUpForm({ turnstileSiteKey }: { turnstileSiteKey: string | nu
     setError(null)
 
     // Basic Validation
-    if (turnstileSiteKey && !captchaToken) {
+    if (!captchaToken) {
       setError("Please complete the CAPTCHA verification.")
       return
     }
@@ -164,23 +153,14 @@ export function SignUpForm({ turnstileSiteKey }: { turnstileSiteKey: string | nu
 
                 {error && <p className="text-sm text-red-500">{error}</p>}
 
-                {turnstileSiteKey ? (
-                  <TurnstileWidget
-                    key={captchaKey}
-                    siteKey={turnstileSiteKey}
-                    onSuccess={handleCaptchaSuccess}
-                    onExpire={handleCaptchaExpire}
-                    onError={handleCaptchaError}
-                  />
-                ) : (
-                  <p className="text-sm text-casino-silver">
-                    CAPTCHA is unavailable in this environment.
-                  </p>
-                )}
+                <CustomCaptcha
+                  onSuccess={handleCaptchaSuccess}
+                  onReset={resetCaptcha}
+                />
 
                 <Button
                   type="submit"
-                  disabled={isLoading || (turnstileSiteKey ? !captchaToken : false)}
+                  disabled={isLoading || !captchaToken}
                   className="w-full bg-casino-gold text-casino-dark hover:bg-casino-gold/90"
                 >
                   {isLoading ? "Creating account..." : "Sign Up"}

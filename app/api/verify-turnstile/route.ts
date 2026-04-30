@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { TurnstileError, verifyTurnstile } from "@/lib/nextjs-turnstile-server"
 
 export async function POST(req: Request) {
   try {
@@ -6,10 +7,7 @@ export async function POST(req: Request) {
     const token = body?.token
 
     if (!token || typeof token !== "string") {
-      return NextResponse.json(
-        { success: false, error: "Missing CAPTCHA token" },
-        { status: 400 }
-      )
+      return NextResponse.json({ success: false, error: "Missing CAPTCHA token" }, { status: 400 })
     }
 
     // For custom CAPTCHA, we simply validate that a token was provided

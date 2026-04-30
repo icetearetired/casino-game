@@ -43,7 +43,7 @@ export function SignUpForm() {
 
     const normalizedUsername = normalizeUsername(username)
     if (!normalizedUsername) {
-      setError("Please enter a username.")
+      setError("Enter a valid username.")
       return
     }
 
@@ -74,6 +74,7 @@ export function SignUpForm() {
         throw new Error("CAPTCHA verification failed. Please try again.")
       }
 
+      // ✅ SIGN UP
       const supabase = createClient()
 
       // Sign up without passing CAPTCHA token to Supabase (we already verified it)
@@ -96,6 +97,7 @@ export function SignUpForm() {
 
       console.log("[v0] Signup successful, redirecting...")
       router.push("/auth/sign-up-success")
+
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Something went wrong."
       console.error("[v0] Signup error:", message)
@@ -120,6 +122,7 @@ export function SignUpForm() {
           <CardContent>
             <form onSubmit={handleSignUp}>
               <div className="flex flex-col gap-6">
+
                 <div className="grid gap-2">
                   <Label htmlFor="username">Username</Label>
                   <Input
@@ -181,6 +184,7 @@ export function SignUpForm() {
                 >
                   {isLoading ? "Creating account..." : "Sign Up"}
                 </Button>
+
               </div>
 
               <div className="mt-4 text-center text-sm text-casino-silver">
@@ -189,6 +193,7 @@ export function SignUpForm() {
                   Login
                 </Link>
               </div>
+
             </form>
           </CardContent>
         </Card>

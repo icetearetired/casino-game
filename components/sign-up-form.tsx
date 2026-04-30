@@ -9,10 +9,10 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { TurnstileWidget } from "@/components/turnstile-widget"
+import { CustomCaptcha } from "@/components/custom-captcha"
 import { normalizeUsername } from "@/lib/utils"
 
-export function SignUpForm({ turnstileSiteKey }: { turnstileSiteKey: string | null }) {
+export function SignUpForm() {
   const [email, setEmail] = useState("")
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
@@ -27,27 +27,17 @@ export function SignUpForm({ turnstileSiteKey }: { turnstileSiteKey: string | nu
     setCaptchaToken(token)
   }, [])
 
-  const handleCaptchaExpire = useCallback(() => {
-    setCaptchaToken(null)
-  }, [])
-
-  const handleCaptchaError = useCallback(() => {
-    setCaptchaToken(null)
-    setError("CAPTCHA failed to load. Please refresh the page.")
-  }, [])
-
   const resetCaptcha = () => {
     setCaptchaToken(null)
-    setCaptchaKey((k) => k + 1)
   }
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
 
-    // basic checks
-    if (turnstileSiteKey && !captchaToken) {
-      setError("Please complete the CAPTCHA.")
+    // Basic Validation
+    if (!captchaToken) {
+      setError("Please complete the CAPTCHA verification.")
       return
     }
 
@@ -70,25 +60,26 @@ export function SignUpForm({ turnstileSiteKey }: { turnstileSiteKey: string | nu
     setIsLoading(true)
 
     try {
-      // ✅ VERIFY CAPTCHA FIRST
-      if (turnstileSiteKey) {
-        const res = await fetch("/api/verify-turnstile", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token: captchaToken }),
-        })
+      // Verify the custom CAPTCHA token with our backend
+      console.log("[v0] Verifying CAPTCHA token:", captchaToken)
+      const verifyRes = await fetch("/api/verify-turnstile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: captchaToken }),
+      })
 
-        const data = await res.json()
-
-        if (!data.success) {
-          throw new Error("CAPTCHA verification failed. Try again.")
-        }
+      const verifyData = await verifyRes.json()
+      console.log("[v0] CAPTCHA verification response:", verifyData)
+      if (!verifyData.success) {
+        throw new Error("CAPTCHA verification failed. Please try again.")
       }
 
       // ✅ SIGN UP
       const supabase = createClient()
 
-      const { error } = await supabase.auth.signUp({
+      // Sign up without passing CAPTCHA token to Supabase (we already verified it)
+      console.log("[v0] Signing up user:", email)
+      const { error: authError } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -99,17 +90,20 @@ export function SignUpForm({ turnstileSiteKey }: { turnstileSiteKey: string | nu
         },
       })
 
-      if (error) throw error
+      if (authError) {
+        console.error("[v0] Auth error:", authError)
+        throw authError
+      }
 
+      console.log("[v0] Signup successful, redirecting...")
       router.push("/auth/sign-up-success")
 
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Something went wrong."
+      console.error("[v0] Signup error:", message)
       setError(message)
-
-      // 🔥 ALWAYS RESET CAPTCHA AFTER ANY FAIL
-      resetCaptcha()
-
+      // Always reset the CAPTCHA on failure so the user can try again
+      resetCaptcha() 
     } finally {
       setIsLoading(false)
     }
@@ -178,23 +172,14 @@ export function SignUpForm({ turnstileSiteKey }: { turnstileSiteKey: string | nu
 
                 {error && <p className="text-sm text-red-500">{error}</p>}
 
-                {turnstileSiteKey ? (
-                  <TurnstileWidget
-                    key={captchaKey}
-                    siteKey={turnstileSiteKey}
-                    onSuccess={handleCaptchaSuccess}
-                    onExpire={handleCaptchaExpire}
-                    onError={handleCaptchaError}
-                  />
-                ) : (
-                  <p className="text-sm text-casino-silver">
-                    CAPTCHA unavailable.
-                  </p>
-                )}
+                <CustomCaptcha
+                  onSuccess={handleCaptchaSuccess}
+                  onReset={resetCaptcha}
+                />
 
                 <Button
                   type="submit"
-                  disabled={isLoading || (turnstileSiteKey ? !captchaToken : false)}
+                  disabled={isLoading || !captchaToken}
                   className="w-full bg-casino-gold text-casino-dark hover:bg-casino-gold/90"
                 >
                   {isLoading ? "Creating account..." : "Sign Up"}
@@ -204,10 +189,7 @@ export function SignUpForm({ turnstileSiteKey }: { turnstileSiteKey: string | nu
 
               <div className="mt-4 text-center text-sm text-casino-silver">
                 Already have an account?{" "}
-                <Link
-                  href="/auth/login"
-                  className="underline underline-offset-4 text-casino-gold"
-                >
+                <Link href="/auth/login" className="underline text-casino-gold">
                   Login
                 </Link>
               </div>

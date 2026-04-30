@@ -60,10 +60,24 @@ export function SignUpForm() {
     setIsLoading(true)
 
     try {
+      // Verify the custom CAPTCHA token with our backend
+      console.log("[v0] Verifying CAPTCHA token:", captchaToken)
+      const verifyRes = await fetch("/api/verify-turnstile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: captchaToken }),
+      })
+
+      const verifyData = await verifyRes.json()
+      console.log("[v0] CAPTCHA verification response:", verifyData)
+      if (!verifyData.success) {
+        throw new Error("CAPTCHA verification failed. Please try again.")
+      }
+
       const supabase = createClient()
 
-      // ✅ Pass the CAPTCHA token directly to Supabase Auth
-      // Supabase will automatically securely verify the Turnstile token on their backend
+      // Sign up without passing CAPTCHA token to Supabase (we already verified it)
+      console.log("[v0] Signing up user:", email)
       const { error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -72,17 +86,19 @@ export function SignUpForm() {
             process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
             `${window.location.origin}/games`,
           data: { username: normalizedUsername },
-          captchaToken: captchaToken ?? undefined, // Add the token here!
         },
       })
 
       if (authError) {
+        console.error("[v0] Auth error:", authError)
         throw authError
       }
 
+      console.log("[v0] Signup successful, redirecting...")
       router.push("/auth/sign-up-success")
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Something went wrong."
+      console.error("[v0] Signup error:", message)
       setError(message)
       // Always reset the CAPTCHA on failure so the user can try again
       resetCaptcha() 

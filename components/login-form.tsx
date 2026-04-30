@@ -9,11 +9,11 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { TurnstileWidget } from "@/components/turnstile-widget"
+import { CustomCaptcha } from "@/components/custom-captcha"
 import { UserRound } from "lucide-react"
 import { generateGuestUsername } from "@/lib/utils"
 
-export function LoginForm({ turnstileSiteKey }: { turnstileSiteKey: string | null }) {
+export function LoginForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [captchaToken, setCaptchaToken] = useState<string | null>(null)
@@ -27,48 +27,32 @@ export function LoginForm({ turnstileSiteKey }: { turnstileSiteKey: string | nul
     setCaptchaToken(token)
   }, [])
 
-  const handleCaptchaExpire = useCallback(() => {
-    setCaptchaToken(null)
-  }, [])
-
-  const handleCaptchaError = useCallback(() => {
-    setCaptchaToken(null)
-    setError("CAPTCHA failed to load. Please refresh the page.")
-  }, [])
-
   const resetCaptcha = () => {
     setCaptchaToken(null)
-    setCaptchaKey((k) => k + 1)
   }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
 
-    if (turnstileSiteKey && !captchaToken) {
+    if (!captchaToken) {
       setError("Please complete the CAPTCHA verification.")
       return
     }
 
     setIsLoading(true)
 
-    let shouldResetCaptchaAfterAttempt = false
-
     try {
-      if (turnstileSiteKey) {
-        const verifyRes = await fetch("/api/verify-turnstile", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token: captchaToken }),
-        })
-        const verifyData = await verifyRes.json()
+      const verifyRes = await fetch("/api/verify-turnstile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: captchaToken }),
+      })
+      const verifyData = await verifyRes.json()
 
-        if (!verifyData.success) {
-          resetCaptcha()
-          throw new Error("CAPTCHA verification failed. Please try again.")
-        }
-
-        shouldResetCaptchaAfterAttempt = true
+      if (!verifyData.success) {
+        resetCaptcha()
+        throw new Error("CAPTCHA verification failed. Please try again.")
       }
 
       const supabase = createClient()
@@ -151,22 +135,15 @@ export function LoginForm({ turnstileSiteKey }: { turnstileSiteKey: string | nul
 
                 {error && <p className="text-sm text-red-500">{error}</p>}
 
-                {turnstileSiteKey ? (
-                  <TurnstileWidget
-                    key={captchaKey}
-                    siteKey={turnstileSiteKey}
-                    onSuccess={handleCaptchaSuccess}
-                    onExpire={handleCaptchaExpire}
-                    onError={handleCaptchaError}
-                  />
-                ) : (
-                  <p className="text-sm text-casino-silver">CAPTCHA is unavailable in this environment.</p>
-                )}
+                <CustomCaptcha
+                  onSuccess={handleCaptchaSuccess}
+                  onReset={resetCaptcha}
+                />
 
                 <Button
                   type="submit"
                   className="w-full bg-casino-gold text-casino-dark hover:bg-casino-gold/90"
-                  disabled={isLoading || (turnstileSiteKey ? !captchaToken : false)}
+                  disabled={isLoading || !captchaToken}
                 >
                   {isLoading ? "Logging in..." : "Login"}
                 </Button>

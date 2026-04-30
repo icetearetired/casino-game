@@ -3,8 +3,8 @@ import { createClient } from "@/lib/supabase/server"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { Coins, Sparkles, Spade, TrendingUp } from "lucide-react"
-import { LogoutButton } from "@/components/logout-button"
+import { Sparkles, Spade, TrendingUp, Crown, Gift, ShoppingBag, Swords, Trophy, ShieldCheck, Medal } from "lucide-react"
+import { GamesTopbar } from "@/components/games-topbar"
 
 export default async function GamesPage() {
   const supabase = await createClient()
@@ -29,24 +29,7 @@ export default async function GamesPage() {
 
   return (
     <div className="min-h-svh bg-casino-dark text-white">
-      {/* Header */}
-      <header className="border-b border-casino-gold/20 bg-casino-dark/95 backdrop-blur">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/games" className="text-2xl font-bold text-casino-gold">
-              Lucky Streak Casino
-            </Link>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 bg-casino-gold/10 px-4 py-2 rounded-lg border border-casino-gold/30">
-                <Coins className="w-5 h-5 text-casino-gold" />
-                <span className="text-casino-gold font-semibold">{profile?.balance?.toLocaleString() || 0}</span>
-                <span className="text-casino-silver text-sm">chips</span>
-              </div>
-              <LogoutButton />
-            </div>
-          </div>
-        </div>
-      </header>
+      <GamesTopbar balance={profile?.balance || 0} />
 
       <div className="container mx-auto px-6 py-12">
         {/* Welcome Section */}
@@ -120,6 +103,27 @@ export default async function GamesPage() {
           </Card>
         </div>
 
+
+
+        <div className="grid md:grid-cols-4 gap-4 mb-12">
+          {[
+            { href: "/games/profile", title: "Profile", icon: Crown },
+            { href: "/games/daily-rewards", title: "Daily Rewards", icon: Gift },
+            { href: "/games/leaderboard", title: "Leaderboard", icon: Trophy },
+            { href: "/games/shop", title: "Shop", icon: ShoppingBag },
+            { href: "/games/cases", title: "Cases", icon: Crown },
+            { href: "/games/duels", title: "AI 1v1", icon: Swords },
+            { href: "/games/admin", title: "Admin", icon: ShieldCheck },
+            { href: "/games/achievements", title: "Achievements", icon: Medal },
+          ].map((item) => {
+            const Icon = item.icon
+            return (
+              <Link key={item.href} href={item.href} className="rounded-lg border border-casino-gold/20 bg-card p-4 hover:border-casino-gold/50">
+                <div className="flex items-center gap-2 text-casino-gold font-semibold"><Icon className="h-4 w-4" />{item.title}</div>
+              </Link>
+            )
+          })}
+        </div>
         {/* Recent Activity */}
         {gameHistory && gameHistory.length > 0 && (
           <Card className="bg-card border-casino-gold/20">

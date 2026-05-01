@@ -1,2 +1,15 @@
-import { redirect } from "next/navigation"; import { createClient } from "@/lib/supabase/server"; import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"; import { Button } from "@/components/ui/button"; import { GamesTopbar } from "@/components/games-topbar"
-export default async function DuelsPage(){ const supabase=await createClient(); const {data:{user}}=await supabase.auth.getUser(); if(!user) redirect('/auth/login'); const {data:profile}=await supabase.from('profiles').select('*').eq('id',user.id).single(); return <div className="min-h-svh bg-casino-dark text-white"><GamesTopbar balance={profile?.balance || 0} /><div className="container mx-auto px-6 py-10"><Card className="bg-card border-casino-gold/20"><CardHeader><CardTitle className="text-casino-gold">AI 1v1 Duels</CardTitle><CardDescription className="text-casino-silver">Challenge an AI rival in quick chip battles.</CardDescription></CardHeader><CardContent className="space-y-3"><p className="text-casino-silver">Mode: Best of 3 rounds • Difficulty: Medium</p><Button className="bg-casino-gold text-casino-dark">Start Duel (Demo)</Button></CardContent></Card></div></div> }
+import { redirect } from "next/navigation"
+import { createClient } from "@/lib/supabase/server"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { GamesTopbar } from "@/components/games-topbar"
+import { playDuel } from "@/lib/feature-actions"
+
+export default async function DuelsPage() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/auth/login')
+  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+
+  return <div className="min-h-svh bg-casino-dark text-white"><GamesTopbar balance={profile?.balance || 0} /><div className="container mx-auto px-6 py-10"><Card className="bg-card border-casino-gold/20"><CardHeader><CardTitle className="text-casino-gold">AI 1v1 Duels</CardTitle><CardDescription className="text-casino-silver">Stake chips and fight best-of-3 against AI.</CardDescription></CardHeader><CardContent className="space-y-3"><form action={playDuel} className="flex items-center gap-3"><input name="stake" type="number" min={50} max={5000} defaultValue={200} className="bg-casino-dark border border-casino-gold/30 rounded px-3 py-2 w-40" /><Button className="bg-casino-gold text-casino-dark">Start Duel</Button></form></CardContent></Card></div></div>
+}

@@ -5,6 +5,7 @@ import { Coins, Bot, User, Trophy, RotateCcw, Play, ArrowLeft } from "lucide-rea
 import Link from "next/link"
 import { recordGameResult } from "@/lib/game-actions"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 interface AIPokerGameProps {
   initialBalance: number

@@ -1,11 +1,6 @@
 "use client"
 
 import { useState, useCallback } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Slider } from "@/components/ui/slider"
-import { GameHeader } from "@/components/game-header"
-import { toast } from "sonner"
 import { Coins, Bot, User, Trophy, RotateCcw, Play, ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import { recordGameResult } from "@/lib/game-actions"

@@ -1,7 +1,4 @@
 import { createClient } from "@/lib/supabase/server"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Trophy, Medal, Coins, Gamepad2, TrendingUp, Crown } from "lucide-react"
 
 export default async function LeaderboardPage() {
@@ -48,12 +45,9 @@ export default async function LeaderboardPage() {
 
       {/* User's Rankings */}
       {user && (
-        <Card className="mb-8 bg-gradient-to-r from-casino-gold/10 to-casino-gold/5 border-casino-gold/30">
-          <CardHeader>
-            <CardTitle className="text-casino-gold">Your Rankings</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-3 gap-4">
+        <div className="mb-8 bg-gradient-to-r from-casino-gold/10 to-casino-gold/5 border border-casino-gold/30 rounded-lg p-6">
+          <h2 className="text-xl font-bold text-casino-gold mb-4">Your Rankings</h2>
+          <div className="grid grid-cols-3 gap-4">
               <div className="text-center p-4 bg-casino-dark rounded-lg">
                 <Coins className="w-6 h-6 mx-auto text-casino-gold mb-2" />
                 <p className="text-2xl font-bold text-white">
@@ -76,69 +70,38 @@ export default async function LeaderboardPage() {
                 <p className="text-casino-silver text-sm">Games</p>
               </div>
             </div>
-          </CardContent>
-        </Card>
+        </div>
       )}
 
-      {/* Leaderboard Tabs */}
-      <Tabs defaultValue="balance" className="space-y-4">
-        <TabsList className="bg-casino-dark border border-casino-gold/20 grid w-full grid-cols-3">
-          <TabsTrigger
-            value="balance"
-            className="data-[state=active]:bg-casino-gold/20 data-[state=active]:text-casino-gold"
-          >
-            <Coins className="w-4 h-4 mr-2 hidden sm:inline" />
-            Richest
-          </TabsTrigger>
-          <TabsTrigger
-            value="winners"
-            className="data-[state=active]:bg-casino-gold/20 data-[state=active]:text-casino-gold"
-          >
-            <TrendingUp className="w-4 h-4 mr-2 hidden sm:inline" />
-            Top Winners
-          </TabsTrigger>
-          <TabsTrigger
-            value="active"
-            className="data-[state=active]:bg-casino-gold/20 data-[state=active]:text-casino-gold"
-          >
-            <Gamepad2 className="w-4 h-4 mr-2 hidden sm:inline" />
-            Most Active
-          </TabsTrigger>
-        </TabsList>
+      {/* Leaderboard Tables */}
+      <div className="space-y-8">
+        <LeaderboardTable
+          title="Richest Players"
+          description="Players with the highest chip balance"
+          data={topBalances || []}
+          valueKey="balance"
+          valueLabel="Balance"
+          currentUserId={user?.id}
+        />
 
-        <TabsContent value="balance">
-          <LeaderboardTable
-            title="Richest Players"
-            description="Players with the highest chip balance"
-            data={topBalances || []}
-            valueKey="balance"
-            valueLabel="Balance"
-            currentUserId={user?.id}
-          />
-        </TabsContent>
+        <LeaderboardTable
+          title="Top Winners"
+          description="Players who have won the most chips"
+          data={topWinners || []}
+          valueKey="total_won"
+          valueLabel="Total Won"
+          currentUserId={user?.id}
+        />
 
-        <TabsContent value="winners">
-          <LeaderboardTable
-            title="Top Winners"
-            description="Players who have won the most chips"
-            data={topWinners || []}
-            valueKey="total_won"
-            valueLabel="Total Won"
-            currentUserId={user?.id}
-          />
-        </TabsContent>
-
-        <TabsContent value="active">
-          <LeaderboardTable
-            title="Most Active Players"
-            description="Players who have played the most games"
-            data={topPlayers || []}
-            valueKey="games_played"
-            valueLabel="Games"
-            currentUserId={user?.id}
-          />
-        </TabsContent>
-      </Tabs>
+        <LeaderboardTable
+          title="Most Active Players"
+          description="Players who have played the most games"
+          data={topPlayers || []}
+          valueKey="games_played"
+          valueLabel="Games"
+          currentUserId={user?.id}
+        />
+      </div>
     </div>
   )
 }
@@ -192,16 +155,15 @@ function LeaderboardTable({
   }
 
   return (
-    <Card className="bg-card border-casino-gold/20">
-      <CardHeader>
-        <CardTitle className="text-casino-gold flex items-center gap-2">
+    <div className="bg-casino-dark border border-casino-gold/20 rounded-lg p-6">
+      <div className="mb-4">
+        <h2 className="text-xl font-bold text-casino-gold flex items-center gap-2 mb-1">
           <Trophy className="h-5 w-5" />
           {title}
-        </CardTitle>
-        <CardDescription className="text-casino-silver">{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-2">
+        </h2>
+        <p className="text-casino-silver text-sm">{description}</p>
+      </div>
+      <div className="space-y-2">
           {data.length > 0 ? (
             data.map((player, index) => {
               const isCurrentUser = player.id === currentUserId
@@ -214,12 +176,9 @@ function LeaderboardTable({
                 >
                   <div className="w-10 flex justify-center">{getRankIcon(index)}</div>
 
-                  <Avatar className="h-10 w-10 border border-casino-gold/30">
-                    <AvatarImage src={player.avatar_url || undefined} />
-                    <AvatarFallback className="bg-casino-gold/20 text-casino-gold text-sm">
-                      {initials}
-                    </AvatarFallback>
-                  </Avatar>
+                  <div className="h-10 w-10 rounded-full bg-casino-gold/20 text-casino-gold text-sm flex items-center justify-center border border-casino-gold/30 flex-shrink-0">
+                    {initials}
+                  </div>
 
                   <div className="flex-1 min-w-0">
                     <p className={`font-medium truncate ${isCurrentUser ? "text-casino-gold" : "text-white"}`}>
@@ -243,8 +202,7 @@ function LeaderboardTable({
           ) : (
             <p className="text-casino-silver text-center py-8">No data available</p>
           )}
-        </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }

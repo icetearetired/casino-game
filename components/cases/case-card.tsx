@@ -1,17 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
 import { openCase, type CaseType, type Prize } from "@/lib/actions/cases"
-import { toast } from "sonner"
 import { Package, Coins, Loader2, Sparkles } from "lucide-react"
 import { useRouter } from "next/navigation"
 

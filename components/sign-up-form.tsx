@@ -3,6 +3,7 @@
 import type React from "react"
 import { useState, useCallback } from "react"
 import { createClient } from "@/lib/supabase/client"
+import { getSupabasePublicEnv } from "@/lib/supabase/env"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -22,10 +23,11 @@ export function SignUpForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [captchaKey, setCaptchaKey] = useState(0)
   const router = useRouter()
+  const supabaseEnv = getSupabasePublicEnv()
 
   const handleCaptchaSuccess = useCallback((token: string) => {
     setCaptchaToken(token)
-  }, [])
+  }, [supabaseEnv])
 
   const resetCaptcha = () => {
     setCaptchaToken(null)
@@ -34,6 +36,11 @@ export function SignUpForm() {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+
+    if (!supabaseEnv.ok) {
+      setError(supabaseEnv.error)
+      return
+    }
 
     // Basic Validation
     if (!captchaToken) {

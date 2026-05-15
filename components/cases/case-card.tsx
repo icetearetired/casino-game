@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { openCase, type CaseType, type Prize } from "@/lib/actions/cases"
+import { openCase } from "@/lib/actions/cases"
+import type { CaseType, Prize } from "@/lib/actions/case-definitions"
 import { Package, Coins, Loader2, Sparkles } from "lucide-react"
 import { useRouter } from "next/navigation"
 

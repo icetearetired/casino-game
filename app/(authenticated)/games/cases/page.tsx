@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Package, History, Info } from "lucide-react"
-import { CASES } from "@/lib/actions/cases"
+import { CASES } from "@/lib/actions/case-definitions"
 import { CaseCard } from "@/components/cases/case-card"
 
 export default async function CasesPage() {

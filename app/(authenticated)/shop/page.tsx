@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Coins, Palette, Sparkles, ShoppingBag, Package } from "lucide-react"
-import { SHOP_ITEMS } from "@/lib/actions/shop"
+import { SHOP_ITEMS } from "@/lib/actions/shop-definitions"
 import { ShopItemCard } from "@/components/shop-item-card"
 
 export default async function ShopPage() {

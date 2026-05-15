@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
+import { getSupabasePublicEnv } from "@/lib/supabase/env"
 import { Navbar } from "@/components/layout/navbar"
 
 export default async function AuthenticatedLayout({
@@ -7,6 +8,11 @@ export default async function AuthenticatedLayout({
 }: {
   children: React.ReactNode
 }) {
+  const supabaseEnv = getSupabasePublicEnv()
+  if (!supabaseEnv.ok) {
+    redirect("/auth/error")
+  }
+
   const supabase = await createClient()
 
   const {

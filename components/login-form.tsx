@@ -69,7 +69,8 @@ export function LoginForm() {
       })
 
       if (authError) throw authError
-      router.push("/games")
+      router.replace("/games")
+      router.refresh()
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "An error occurred"
       setError(message)
@@ -97,7 +98,8 @@ export function LoginForm() {
         },
       })
       if (authError) throw authError
-      router.push("/games")
+      router.replace("/games")
+      router.refresh()
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to start guest session")
     } finally {
